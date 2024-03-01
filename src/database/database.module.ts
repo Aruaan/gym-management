@@ -1,5 +1,11 @@
 import { Module } from '@nestjs/common';
 import {TypeOrmModule} from '@nestjs/typeorm'
+import { Member } from './entities/Member';
+import { Exercise } from './entities/Exercise';
+import { Equipment } from './entities/Equipment';
+import { Workout } from './entities/Workout';
+import { Measurement } from './entities/Measurement';
+import { Meal } from './entities/Meal';
 @Module({
   imports: [
     TypeOrmModule.forRoot({
@@ -8,9 +14,11 @@ import {TypeOrmModule} from '@nestjs/typeorm'
       port: 3306,
       username: 'root',
       password: 'samojako',
-      database: 'gym_db',
-      entities: ["dist/**/*.entity{.ts,.js}"],
+      database: 'test',
+      entities: [Member, Exercise, Equipment, Workout, Measurement, Meal],
       synchronize: true,
+      migrations: [`${__dirname}/../../db/migrations/*{.ts,.js}`],
+      migrationsTableName: 'migrations',
     })
   ]
 })
