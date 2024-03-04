@@ -1,14 +1,14 @@
 import { Column, Entity, JoinColumn, JoinTable, ManyToMany, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
-import { Workout } from "./Workout";
-import { Equipment } from "./Equipment";
+import { Workout } from "./Workout.entity";
+import { Equipment } from "./Equipment.entity";
 
-@Entity()
+@Entity({name:'exercises'})
 export class Exercise {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column('uuid')
-  workout_id:string
+  @Column('uuid', {name: 'workout_id'})
+  workoutId:string
 
   @Column({type:"date"})
   date: Date
@@ -17,7 +17,7 @@ export class Exercise {
   type: string
 
   @Column({length: 255, type:"varchar", nullable:true})
-  notes: string
+  notes: string | null
 
   @ManyToOne(() => Workout, workout => workout.exercise)
   @JoinColumn({name: 'workout_id', referencedColumnName:'id'})

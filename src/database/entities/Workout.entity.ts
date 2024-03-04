@@ -1,8 +1,8 @@
 import { Column, Entity, JoinColumn, ManyToMany, ManyToOne, OneToMany, PrimaryGeneratedColumn } from "typeorm";
-import { Member } from "./Member";
-import { Exercise } from "./Exercise";
+import { Member } from "./Member.entity";
+import { Exercise } from "./Exercise.entity";
 
-@Entity()
+@Entity({name:'workouts'})
 export class Workout {
   @PrimaryGeneratedColumn('uuid')
   id: string
@@ -10,14 +10,14 @@ export class Workout {
   @Column({type:'date'})
   date: Date
 
-  @Column ({type:'uuid'})
-  member_id: string
+  @Column ({type:'uuid', name:'member_id'})
+  memberId: string
 
   @Column({type:'varchar', length: 30, nullable:true})
-  type: string
+  type: string | null
 
   @Column({type:'varchar', length: 255, nullable:true})
-  notes: string
+  notes: string | null
 
   @ManyToOne(() => Member, member => member.workouts)
   @JoinColumn({name:'member_id', referencedColumnName: 'id'})

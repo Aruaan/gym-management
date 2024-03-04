@@ -1,16 +1,16 @@
 import { Column, Decimal128, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn, Timestamp } from "typeorm";
-import { Member } from "./Member";
+import { Member } from "./Member.entity";
 
-@Entity()
+@Entity({name:'meals'})
 export class Meal {
   @PrimaryGeneratedColumn('uuid')
   id: string
 
-  @Column ({type:'uuid'})
-  member_id: string
+  @Column ({type:'uuid', name:'member_id'})
+  memberId: string
 
-  @Column({type: 'datetime'})
-  created_at: Date
+  @Column({type: 'datetime', name:'created_at'})
+  createdAt: Date
 
   @Column({length: 40, type:"varchar"})
   name: string
@@ -19,7 +19,7 @@ export class Meal {
   calories: number
 
   @Column({length:255, type:"varchar", nullable:true})
-  notes:string
+  notes:string | null
 
   @ManyToOne(() => Member, member => member.meals)
   @JoinColumn({name:'member_id', referencedColumnName: 'id'})

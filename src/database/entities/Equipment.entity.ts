@@ -1,5 +1,5 @@
 import { Column, Entity, ManyToMany, PrimaryGeneratedColumn } from "typeorm";
-import { Exercise } from "./Exercise";
+import { Exercise } from "./Exercise.entity";
 
 @Entity()
 export class Equipment {
@@ -12,11 +12,11 @@ export class Equipment {
   @Column ({length: 30, type:"varchar"})
   type:string
 
-  @Column ({type:"date", nullable:true})
-  purchase_date: Date
+  @Column ({type:"date", nullable:true, name: 'purchase_date'})
+  purchaseDate: Date
 
   @Column ({length: 255, type:"varchar", nullable:true})
-  notes: string
+  notes: string | null
 
   @ManyToMany(() => Exercise, exercise => exercise.equipment)
   exercises: Exercise[]
