@@ -12,7 +12,7 @@ export class Equipment {
   @Column ({length: 30, type:"varchar"})
   type:string
 
-  @Column ({type:"date", nullable:true, name: 'purchase_date'})
+  @Column ({type:"date", nullable : true, name: 'purchase_date'})
   purchaseDate: Date
 
   @Column ({length: 255, type:"varchar", nullable:true})
