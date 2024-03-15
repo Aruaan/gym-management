@@ -1,11 +1,11 @@
-import {getConnectionManager, Connection, getRepository} from 'typeorm'
+import { Connection } from 'typeorm'
 import { Member } from '../entities/Member.entity'
 import { faker } from '@faker-js/faker'
 
-async function seedMembers (connection: Connection){ 
+async function seedMembers(connection: Connection) {
   const memberRepository = connection.getRepository(Member)
 
-  for (let i = 0; i < 20; i++){
+  for (let i = 0; i < 20; i++) {
     const member = new Member()
     member.firstName = faker.person.firstName()
     member.lastName = faker.person.lastName()
@@ -13,8 +13,8 @@ async function seedMembers (connection: Connection){
     member.joinDate = faker.date.anytime()
 
     await memberRepository.save(member)
-    }
+  }
 
-    console.log('Member seeding completed')
+  console.log('Member seeding completed')
 }
 export default seedMembers
