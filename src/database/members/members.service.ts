@@ -1,14 +1,14 @@
-import { Injectable, InternalServerErrorException } from '@nestjs/common'
+import { BadRequestException, Injectable, InternalServerErrorException } from '@nestjs/common'
 import { MemberRepository } from './members.repository'
 import { PaginatedMemberResult } from './dto/paginated-member.dto'
 import { InjectRepository } from '@nestjs/typeorm'
 import { UpdateMemberDto } from './dto/update-member.dto'
 import { Member } from '../entities/Member.entity'
 import { CreateMemberDto } from './dto/create-member.dto'
-import { PaginationRequestDto } from './dto/pagionation-request.dto'
+import { PaginationRequestDto } from './dto/pagination-request.dto'
 import { errorMessages } from '../databaseUtil/utilFunctions'
 @Injectable()
-export class MembersService {
+export class MemberService {
   constructor(@InjectRepository(MemberRepository) private memberRepository: MemberRepository) {}
 
   async findAllMembers(paginationRequestDto: PaginationRequestDto): Promise<PaginatedMemberResult> {
@@ -36,6 +36,12 @@ export class MembersService {
   }
 
   async updateMember(id: string, updateMemberDto: UpdateMemberDto): Promise<Member> {
+    const allowedUpdateFields = ['firstName', 'lastName', 'email']
+    Object.keys(updateMemberDto).forEach((key) => {
+      if (!allowedUpdateFields.includes(key)) {
+        throw new BadRequestException(`Invalid field name ${key}`)
+      }
+    })
     return await this.memberRepository.updateMember(id, updateMemberDto)
   }
 
