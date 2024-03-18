@@ -1,7 +1,7 @@
 import { createConnection } from 'typeorm'
 import { DataSourceOptions } from 'typeorm'
 import * as dotenv from 'dotenv'
-import seedMeals from './database/seeds/meal-create.seed'
+import seedEquipment from './database/seeds/equipment-create.seed'
 
 dotenv.config()
 
@@ -18,7 +18,7 @@ const connectionOptions: DataSourceOptions = {
 
 createConnection(connectionOptions)
   .then(async (connection) => {
-    await seedMeals(connection)
+    await seedEquipment(connection)
     await connection.close()
     console.log('All seeders executed successfully')
   })
