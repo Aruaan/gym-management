@@ -7,6 +7,7 @@ import { WorkoutModule } from './database/workouts/workouts.module'
 import { ExercisesModule } from './database/exercises/exercises.module'
 import { MealModule } from './database/meals/meal.module'
 import { EquipmentModule } from './database/equipment/equipment.module'
+import { MeasurementModule } from './database/measurement/measurement.module'
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { EquipmentModule } from './database/equipment/equipment.module'
     ExercisesModule,
     MealModule,
     EquipmentModule,
+    MeasurementModule,
   ],
   controllers: [AppController],
   providers: [AppService],
