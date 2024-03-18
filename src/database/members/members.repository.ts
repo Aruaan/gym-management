@@ -8,38 +8,38 @@ import {
   NotFoundException,
 } from '@nestjs/common'
 import { CreateMemberDto } from './dto/create-member.dto'
-
+import { PaginationRequestDto } from './dto/pagionation-request.dto'
+import { errorMessages } from '../databaseUtil/utilFunctions'
 @Injectable()
 export class MemberRepository extends Repository<Member> {
   constructor(private dataSource: DataSource) {
     super(Member, dataSource.createEntityManager())
   }
   async createAndSave(createMemberDto: CreateMemberDto): Promise<Member> {
-    const newMember = this.create(createMemberDto)
+    const existingMember = await this.findOne({ where: { email: createMemberDto.email } })
 
-    try {
-      await this.save(newMember)
-      return newMember
-    } catch (error) {
-      if (error.code === 'ER_DUP_ENTRY') {
-        throw new ConflictException('Member with that email already exists')
-      } else {
-        throw new InternalServerErrorException('Error saving the member')
-      }
+    if (existingMember) {
+      throw new ConflictException('Member with that email already exists.')
     }
+
+    const newMember = this.create(createMemberDto)
+    return await this.save(newMember)
   }
 
-  async findAll(limit: number, offset: number): Promise<[Member[], number]> {
+  async findAll(paginationRequest: PaginationRequestDto): Promise<[Member[], number]> {
+    const { limit, offset } = paginationRequest
+
     const [members, total] = await Promise.all([
-      this.createQueryBuilder('member').skip(offset).take(limit).getMany(),
-      this.createQueryBuilder('member').getCount(),
+      this.find({ skip: offset, take: limit }),
+      this.count(),
     ])
 
     return [members, total]
   }
+
   async findById(id: string): Promise<Member> {
     const member = await this.findOne({ where: { id } })
-    if (!member) throw new NotFoundException('Member not found')
+    if (!member) throw new NotFoundException(errorMessages.generateEntityNotFound('Member'))
     return member
   }
 
@@ -51,14 +51,14 @@ export class MemberRepository extends Repository<Member> {
       await this.save(updated)
       return updated
     } catch (error) {
-      throw new InternalServerErrorException('Error updating member')
+      throw new InternalServerErrorException(errorMessages.generateUpdateFailed('member'))
     }
   }
 
   async deleteMember(id: string): Promise<void> {
     const result = await this.delete(id)
     if (result.affected === 0) {
-      throw new NotFoundException('Member not found')
+      throw new NotFoundException(errorMessages.generateEntityNotFound('Member'))
     }
   }
 }

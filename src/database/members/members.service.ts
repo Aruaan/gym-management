@@ -5,16 +5,20 @@ import { InjectRepository } from '@nestjs/typeorm'
 import { UpdateMemberDto } from './dto/update-member.dto'
 import { Member } from '../entities/Member.entity'
 import { CreateMemberDto } from './dto/create-member.dto'
+import { PaginationRequestDto } from './dto/pagionation-request.dto'
+import { errorMessages } from '../databaseUtil/utilFunctions'
 @Injectable()
 export class MembersService {
   constructor(@InjectRepository(MemberRepository) private memberRepository: MemberRepository) {}
-  async findAllMembers(limit: number, offset: number): Promise<PaginatedMemberResult> {
+
+  async findAllMembers(paginationRequestDto: PaginationRequestDto): Promise<PaginatedMemberResult> {
     try {
-      const [members, total] = await this.memberRepository.findAll(limit, offset)
+      const { limit, offset } = paginationRequestDto
+      const [members, total] = await this.memberRepository.findAll(paginationRequestDto)
       const totalPages = Math.ceil(total / limit)
       return { data: members, limit, offset, total, totalPages }
     } catch (error) {
-      throw new InternalServerErrorException('Error fetching members')
+      throw new InternalServerErrorException(errorMessages.generateFetchingError('members'))
     }
   }
 
@@ -23,7 +27,7 @@ export class MembersService {
       const newMember = this.memberRepository.create(createMemberDto)
       return await this.memberRepository.save(newMember)
     } catch (error) {
-      throw new InternalServerErrorException('Error Adding Employee')
+      throw new InternalServerErrorException('Error adding member')
     }
   }
 
