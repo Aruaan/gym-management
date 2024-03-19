@@ -7,7 +7,6 @@ import { MealRepository } from './meal.repository'
 
 @Module({
   imports: [TypeOrmModule.forFeature([Meal])],
-
   controllers: [MealController],
   providers: [MealService, MealRepository],
 })
