@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common'
 import { MembersController } from './members.controller'
-import { MembersService } from './members.service'
+import { MemberService } from './members.service'
 import { MemberRepository } from './members.repository'
 import { TypeOrmModule } from '@nestjs/typeorm'
 import { Member } from '../entities/Member.entity'
@@ -8,6 +8,6 @@ import { Member } from '../entities/Member.entity'
 @Module({
   imports: [TypeOrmModule.forFeature([Member])],
   controllers: [MembersController],
-  providers: [MembersService, MemberRepository],
+  providers: [MemberService, MemberRepository],
 })
-export class MembersModule {}
+export class MemberModule {}

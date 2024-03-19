@@ -8,7 +8,7 @@ import {
   NotFoundException,
 } from '@nestjs/common'
 import { CreateMemberDto } from './dto/create-member.dto'
-import { PaginationRequestDto } from './dto/pagionation-request.dto'
+import { PaginationRequestDto } from './dto/pagination-request.dto'
 import { errorMessages } from '../databaseUtil/utilFunctions'
 @Injectable()
 export class MemberRepository extends Repository<Member> {
@@ -38,7 +38,9 @@ export class MemberRepository extends Repository<Member> {
   }
 
   async findById(id: string): Promise<Member> {
-    const member = await this.findOne({ where: { id } })
+    const member = await this.findOne({
+      where: { id: id },
+    })
     if (!member) throw new NotFoundException(errorMessages.generateEntityNotFound('Member'))
     return member
   }
