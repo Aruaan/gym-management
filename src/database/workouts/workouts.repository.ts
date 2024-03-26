@@ -18,8 +18,9 @@ export class WorkoutRepository extends Repository<Workout> {
   }
 
   async findAllWorkouts(paginationRequest: PaginationRequestDto): Promise<[Workout[], number]> {
-    const { limit, offset } = paginationRequest
+    const { limit, page } = paginationRequest
     const queryBuilder = this.createQueryBuilder('workout')
+    const offset = (page - 1) * limit
 
     try {
       const [workouts, total] = await queryBuilder.skip(offset).take(limit).getManyAndCount()
@@ -38,10 +39,11 @@ export class WorkoutRepository extends Repository<Workout> {
   }
 
   async findAllByMemberId(
-    memberId: string,
-    paginationRequest: PaginationRequestDto
+    paginationRequest: PaginationRequestDto,
+    memberId: string
   ): Promise<[Workout[], number]> {
-    const { limit, offset } = paginationRequest
+    const { limit, page } = paginationRequest
+    const offset = (page - 1) * limit
     const query = this.createQueryBuilder('workout')
       .where('workout.memberId = :memberId', { memberId })
       .skip(offset)

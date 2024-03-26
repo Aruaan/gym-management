@@ -18,7 +18,9 @@ export class EquipmentService {
     paginationRequestDto: PaginationRequestDto
   ): Promise<PaginatedEquipmentResult> {
     try {
-      const { limit, offset } = paginationRequestDto
+      const { limit, page } = paginationRequestDto
+      const offset = (page - 1) * limit
+
       const [equipment, total] = await this.equipmentRepository.findAll(paginationRequestDto)
       const totalPages = Math.ceil(total / limit)
       return { data: equipment, limit, offset, total, totalPages }

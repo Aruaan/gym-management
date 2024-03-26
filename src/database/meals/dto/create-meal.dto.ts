@@ -1,12 +1,4 @@
-import {
-  IsDateString,
-  IsDecimal,
-  IsNotEmpty,
-  IsOptional,
-  IsString,
-  IsUUID,
-  Length,
-} from 'class-validator'
+import { IsDate, IsNotEmpty, IsNumber, IsOptional, IsString, IsUUID, Length } from 'class-validator'
 
 export class CreateMealDto {
   @IsNotEmpty()
@@ -18,7 +10,7 @@ export class CreateMealDto {
   @Length(1, 40)
   name: string
 
-  @IsDecimal({ decimal_digits: '2' })
+  @IsNumber()
   @IsNotEmpty()
   calories: number
 
@@ -27,6 +19,7 @@ export class CreateMealDto {
   @Length(0, 255)
   notes?: string
 
-  @IsDateString()
+  @IsDate()
+  @IsOptional()
   createdAt: Date
 }

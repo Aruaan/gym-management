@@ -12,16 +12,20 @@ import {
   Query,
   HttpCode,
   InternalServerErrorException,
+  UsePipes,
+  ValidationPipe,
 } from '@nestjs/common'
 import { MemberService } from './members.service'
-import { ApiOperation } from '@nestjs/swagger'
+import { ApiOperation, ApiTags } from '@nestjs/swagger'
 import { PaginatedMemberResult } from './dto/paginated-member.dto'
 import { CreateMemberDto } from './dto/create-member.dto'
 import { Member } from '../entities/Member.entity'
 import { PaginationRequestDto } from './dto/pagination-request.dto'
 import { errorMessages } from '../databaseUtil/utilFunctions'
 import { UpdateMemberDto } from './dto/update-member.dto'
+@ApiTags('members')
 @Controller('members')
+@UsePipes(new ValidationPipe())
 export class MembersController {
   constructor(private readonly memberService: MemberService) {}
 

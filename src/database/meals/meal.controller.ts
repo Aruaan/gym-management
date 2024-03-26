@@ -14,14 +14,14 @@ import {
   Query,
 } from '@nestjs/common'
 import { MealService } from './meal.service'
-import { ApiOperation } from '@nestjs/swagger'
+import { ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger'
 import { errorMessages } from '/Users/aleksa/Desktop/Projects/gym-backend/src/database/databaseUtil/utilFunctions'
 import { PaginationRequestDto } from '/Users/aleksa/Desktop/Projects/gym-backend/src/database/members/dto/pagination-request.dto'
 import { PaginatedMealResult } from './dto/paginated-meal.dto'
 import { Meal } from '/Users/aleksa/Desktop/Projects/gym-backend/src/database/entities/Meal.entity'
 import { CreateMealDto } from './dto/create-meal.dto'
 import { UpdateMealDto } from './dto/update-meal.dto'
-
+@ApiTags('meals')
 @Controller('meals')
 export class MealController {
   constructor(private readonly mealService: MealService) {}
@@ -32,10 +32,13 @@ export class MealController {
     description:
       'Retrieves a list of meals with pagination. You can specify the number of results to return (limit) and an offset for pagination. Retrieves a list of all meals logged by a single member if a memberID is queried.',
   })
+  @ApiQuery({ name: 'memberId', required: false, type: String })
   async findAll(
     @Query() paginationRequest: PaginationRequestDto,
     @Query('memberId') memberId?: string
   ): Promise<PaginatedMealResult> {
+    console.log('findAll controller endpoint reached')
+
     if (memberId)
       return this.mealService.findAllByMemberId(memberId, paginationRequest).catch(() => {
         throw new HttpException(

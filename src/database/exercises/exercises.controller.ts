@@ -13,14 +13,14 @@ import {
   InternalServerErrorException,
   Post,
 } from '@nestjs/common'
-import { ApiOperation } from '@nestjs/swagger'
+import { ApiOperation, ApiTags } from '@nestjs/swagger'
 import { errorMessages } from '/Users/aleksa/Desktop/Projects/gym-backend/src/database/databaseUtil/utilFunctions'
 import { PaginationRequestDto } from '/Users/aleksa/Desktop/Projects/gym-backend/src/database/members/dto/pagination-request.dto'
 import { Exercise } from '/Users/aleksa/Desktop/Projects/gym-backend/src/database/entities/Exercise.entity'
 import { ExerciseService } from './exercises.service'
 import { CreateExerciseDto } from './dto/create-exercise.dto'
 import { PaginatedExerciseResult } from './dto/paginated-exercise.dto'
-
+@ApiTags('exercises')
 @Controller('exercises')
 export class ExerciseController {
   constructor(private readonly exerciseService: ExerciseService) {}

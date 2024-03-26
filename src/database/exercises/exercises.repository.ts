@@ -21,7 +21,9 @@ export class ExerciseRepository extends Repository<Exercise> {
   async findAllExercises(
     paginationRequest: PaginationRequestDto
   ): Promise<PaginatedExerciseResult> {
-    const { limit, offset } = paginationRequest
+    const { limit, page } = paginationRequest
+    const offset = (page - 1) * limit
+
     const [exercises, total] = await this.findAndCount({ skip: offset, take: limit })
     const totalPages = Math.ceil(total / limit)
     return { data: exercises, limit, offset, total, totalPages }
@@ -31,7 +33,9 @@ export class ExerciseRepository extends Repository<Exercise> {
     workoutId: string,
     paginationRequest: PaginationRequestDto
   ): Promise<PaginatedExerciseResult> {
-    const { limit, offset } = paginationRequest
+    const { limit, page } = paginationRequest
+    const offset = (page - 1) * limit
+
     const [exercises, total] = await this.findAndCount({
       where: { workoutId },
       skip: offset,

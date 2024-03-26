@@ -29,8 +29,8 @@ export class EquipmentRepository extends Repository<Equipment> {
   }
 
   async findAll(paginationRequest: PaginationRequestDto): Promise<[Equipment[], number]> {
-    const { limit, offset } = paginationRequest
-
+    const { limit, page } = paginationRequest
+    const offset = (page - 1) * limit
     const [equipment, total] = await Promise.all([
       this.find({ skip: offset, take: limit }),
       this.count(),

@@ -17,7 +17,8 @@ export class WorkoutService {
   constructor(@InjectRepository(WorkoutRepository) private workoutRepository: WorkoutRepository) {}
 
   async findAllWorkouts(paginationRequest: PaginationRequestDto): Promise<PaginatedWorkoutResult> {
-    const { limit, offset } = paginationRequest
+    const { limit, page } = paginationRequest
+    const offset = (page - 1) * limit
     const [workouts, total] = await this.workoutRepository.findAndCount({
       skip: offset,
       take: limit,
@@ -35,13 +36,15 @@ export class WorkoutService {
   }
 
   async findAllByMemberId(
-    memberId: string,
-    paginationRequest: PaginationRequestDto
+    paginationRequest: PaginationRequestDto,
+    memberId: string
   ): Promise<PaginatedWorkoutResult> {
-    const { limit, offset } = paginationRequest
+    const { limit, page } = paginationRequest
+    const offset = (page - 1) * limit
+
     const [workouts, total] = await this.workoutRepository.findAllByMemberId(
-      memberId,
-      paginationRequest
+      paginationRequest,
+      memberId
     )
     const totalPages = Math.ceil(total / limit)
     return { data: workouts, limit, offset, total, totalPages }

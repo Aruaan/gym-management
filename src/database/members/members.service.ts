@@ -13,11 +13,13 @@ export class MemberService {
 
   async findAllMembers(paginationRequestDto: PaginationRequestDto): Promise<PaginatedMemberResult> {
     try {
-      const { limit, offset } = paginationRequestDto
-      const [members, total] = await this.memberRepository.findAll(paginationRequestDto)
+      const { limit, page } = paginationRequestDto
+      const offset = (page - 1) * limit
+      const [members, total] = await this.memberRepository.findAll({ skip: offset, take: limit })
       const totalPages = Math.ceil(total / limit)
       return { data: members, limit, offset, total, totalPages }
     } catch (error) {
+      console.error(error)
       throw new InternalServerErrorException(errorMessages.generateFetchingError('members'))
     }
   }

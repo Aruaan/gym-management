@@ -1,10 +1,14 @@
+import { ApiPropertyOptional } from '@nestjs/swagger'
 import { IsNumber, Min } from 'class-validator'
 
 export class PaginationRequestDto {
   @IsNumber()
-  @Min(0)
+  @Min(1)
+  @ApiPropertyOptional({ type: Number, default: 10 })
   limit: number
-  @Min(0)
+
   @IsNumber()
-  offset: number
+  @Min(1)
+  @ApiPropertyOptional({ type: Number, default: 1 })
+  page: number
 }

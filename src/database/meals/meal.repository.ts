@@ -17,16 +17,10 @@ export class MealRepository extends Repository<Meal> {
     return await this.save(newMeal)
   }
 
-  async findAllMeals(paginationRequest: PaginationRequestDto): Promise<[Meal[], number]> {
-    const { limit, offset } = paginationRequest
-    const queryBuilder = this.createQueryBuilder('meal')
+  async findAll(options: { skip: number; take: number }): Promise<[Meal[], number]> {
+    const [meals, total] = await Promise.all([this.find(options), this.count()])
 
-    try {
-      const [meals, total] = await queryBuilder.skip(offset).take(limit).getManyAndCount()
-      return [meals, total]
-    } catch (error) {
-      throw new NotFoundException(errorMessages.generateEntityNotFound('Meals'))
-    }
+    return [meals, total]
   }
 
   async findById(id: string): Promise<Meal> {
@@ -41,7 +35,9 @@ export class MealRepository extends Repository<Meal> {
     memberId: string,
     paginationRequest: PaginationRequestDto
   ): Promise<[Meal[], number]> {
-    const { limit, offset } = paginationRequest
+    const { limit, page } = paginationRequest
+    const offset = (page - 1) * limit
+
     const query = this.createQueryBuilder('meal')
       .where('meal.memberId = :memberId', { memberId })
       .skip(offset)

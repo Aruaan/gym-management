@@ -20,7 +20,9 @@ export class MeasurementRepository extends Repository<Measurement> {
   async findAllMeasurements(
     paginationRequest: PaginationRequestDto
   ): Promise<[Measurement[], number]> {
-    const { limit, offset } = paginationRequest
+    const { limit, page } = paginationRequest
+    const offset = (page - 1) * limit
+
     const queryBuilder = this.createQueryBuilder('measurement')
 
     try {
@@ -44,7 +46,9 @@ export class MeasurementRepository extends Repository<Measurement> {
     memberId: string,
     paginationRequest: PaginationRequestDto
   ): Promise<[Measurement[], number]> {
-    const { limit, offset } = paginationRequest
+    const { limit, page } = paginationRequest
+    const offset = (page - 1) * limit
+
     const query = this.createQueryBuilder('measurement')
       .where('measurement.memberId = :memberId', { memberId })
       .skip(offset)

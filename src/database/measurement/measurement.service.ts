@@ -19,7 +19,9 @@ export class MeasurementService {
     paginationRequestDto: PaginationRequestDto
   ): Promise<PaginatedMeasurementResult> {
     try {
-      const { limit, offset } = paginationRequestDto
+      const { limit, page } = paginationRequestDto
+      const offset = (page - 1) * limit
+
       const [measurements, total] =
         await this.measurementRepository.findAllMeasurements(paginationRequestDto)
       const totalPages = Math.ceil(total / limit)
@@ -41,7 +43,9 @@ export class MeasurementService {
     memberId: string,
     paginationRequest: PaginationRequestDto
   ): Promise<PaginatedMeasurementResult> {
-    const { limit, offset } = paginationRequest
+    const { limit, page } = paginationRequest
+    const offset = (page - 1) * limit
+
     const [measurements, total] = await this.measurementRepository.findAllByMemberId(
       memberId,
       paginationRequest

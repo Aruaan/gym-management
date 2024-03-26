@@ -14,14 +14,14 @@ import {
   Post,
 } from '@nestjs/common'
 import { WorkoutService } from './workouts.service'
-import { ApiOperation } from '@nestjs/swagger'
+import { ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger'
 import { errorMessages } from '../databaseUtil/utilFunctions'
 import { PaginationRequestDto } from '../members/dto/pagination-request.dto'
 import { PaginatedWorkoutResult } from './dto/paginated-workout.dto'
 import { Workout } from '../entities/Workout.entity'
 import { UpdateWorkoutDto } from './dto/update-workout.dto'
 import { CreateWorkoutDto } from './dto/create-workout.dto'
-
+@ApiTags('workouts')
 @Controller('workouts')
 export class WorkoutController {
   constructor(private readonly workoutService: WorkoutService) {}
@@ -32,12 +32,13 @@ export class WorkoutController {
     description:
       'Retrieves a list of workouts with pagination. You can specify the number of results to return (limit) and an offset for pagination. Retrieves a list of all workouts logged by a single member if a memberID is queried.',
   })
+  @ApiQuery({ name: 'memberId', required: false, type: String })
   async findAll(
-    @Query() paginationRequest: PaginationRequestDto,
+    @Query('paginationRequest') paginationRequest?: PaginationRequestDto,
     @Query('memberId') memberId?: string
   ): Promise<PaginatedWorkoutResult> {
     if (memberId)
-      return this.workoutService.findAllByMemberId(memberId, paginationRequest).catch(() => {
+      return this.workoutService.findAllByMemberId(paginationRequest, memberId).catch(() => {
         throw new HttpException(
           errorMessages.generateFetchingError('workouts'),
           HttpStatus.INTERNAL_SERVER_ERROR

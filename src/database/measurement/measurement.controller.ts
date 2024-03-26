@@ -1,12 +1,12 @@
 import { Controller, Get, Param, Query, Post, Body, Patch, Delete } from '@nestjs/common'
-import { ApiOperation } from '@nestjs/swagger'
+import { ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger'
 import { PaginationRequestDto } from '../members/dto/pagination-request.dto'
 import { PaginatedMeasurementResult } from './dto/paginated-measurement'
 import { Measurement } from '../entities/Measurement.entity'
 import { MeasurementService } from './measurement.service'
 import { CreateMeasurementDto } from './dto/create-measurement.dto'
 import { UpdateMeasurementDto } from './dto/update-measurement.dto'
-
+@ApiTags('measurements')
 @Controller('measurements')
 export class MeasurementController {
   constructor(private readonly measurementService: MeasurementService) {}
@@ -17,6 +17,7 @@ export class MeasurementController {
     description:
       'Retrieves a list of measurements with pagination. You can specify the number of results to return (limit) and an offset for pagination. Retrieves a list of all measurements logged by a single member if a memberID is queried.',
   })
+  @ApiQuery({ name: 'memberId', required: false, type: String })
   async findAll(
     @Query() paginationRequest: PaginationRequestDto,
     @Query('memberId') memberId?: string

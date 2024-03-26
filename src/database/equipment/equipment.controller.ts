@@ -13,7 +13,7 @@ import {
   Post,
   Query,
 } from '@nestjs/common'
-import { ApiOperation } from '@nestjs/swagger'
+import { ApiOperation, ApiTags } from '@nestjs/swagger'
 import { PaginationRequestDto } from '../members/dto/pagination-request.dto'
 import { CreateEquipmentDto } from './dto/create-equipment.dto'
 import { Equipment } from '../entities/Equipment.entity'
@@ -21,7 +21,7 @@ import { errorMessages } from '../databaseUtil/utilFunctions'
 import { EquipmentService } from './equipment.service'
 import { PaginatedEquipmentResult } from './dto/paginated-equipment.dto'
 import { UpdateEquipmentDto } from './dto/update-equipment.dto'
-
+@ApiTags('equipments')
 @Controller('equipments')
 export class EquipmentController {
   constructor(private readonly equipmentService: EquipmentService) {}

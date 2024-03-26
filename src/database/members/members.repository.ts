@@ -8,7 +8,6 @@ import {
   NotFoundException,
 } from '@nestjs/common'
 import { CreateMemberDto } from './dto/create-member.dto'
-import { PaginationRequestDto } from './dto/pagination-request.dto'
 import { errorMessages } from '../databaseUtil/utilFunctions'
 @Injectable()
 export class MemberRepository extends Repository<Member> {
@@ -26,13 +25,8 @@ export class MemberRepository extends Repository<Member> {
     return await this.save(newMember)
   }
 
-  async findAll(paginationRequest: PaginationRequestDto): Promise<[Member[], number]> {
-    const { limit, offset } = paginationRequest
-
-    const [members, total] = await Promise.all([
-      this.find({ skip: offset, take: limit }),
-      this.count(),
-    ])
+  async findAll(options: { skip: number; take: number }): Promise<[Member[], number]> {
+    const [members, total] = await Promise.all([this.find(options), this.count()])
 
     return [members, total]
   }
