@@ -1,9 +1,4 @@
-import {
-  BadRequestException,
-  Injectable,
-  InternalServerErrorException,
-  NotFoundException,
-} from '@nestjs/common'
+import { Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
 import { MealRepository } from './meal.repository'
 import { PaginationRequestDto } from '/Users/aleksa/Desktop/Projects/gym-backend/src/database/members/dto/pagination-request.dto'
@@ -23,8 +18,6 @@ export class MealService {
   ) {}
 
   async findAllMeals(paginationRequestDto: PaginationRequestDto): Promise<PaginatedMealResult> {
-    console.log('findAllMeals called') // Add this line
-
     try {
       const { limit, page } = paginationRequestDto
       const offset = (page - 1) * limit
@@ -66,8 +59,6 @@ export class MealService {
     try {
       const meal = this.mealRepository.create(createMealDto)
       const savedMeal = await queryRunner.manager.save(meal)
-      throw new BadRequestException('Simulated error')
-      const savedMeal2 = await queryRunner.manager.save(meal)
       await queryRunner.commitTransaction()
       return savedMeal
     } catch (err) {
