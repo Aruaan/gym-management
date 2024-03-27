@@ -10,7 +10,7 @@ import {
 } from 'typeorm'
 import { Workout } from './Workout.entity'
 import { Equipment } from './Equipment.entity'
-import { ExerciseType } from '../enums/Exercise.enum'
+import { ExerciseType } from '../../modules/enums/Exercise.enum'
 
 @Entity({ name: 'exercises' })
 export class Exercise {

@@ -1,6 +1,6 @@
 import { Connection } from 'typeorm'
 import { faker } from '@faker-js/faker'
-import { EquipmentType } from '../enums/Equipment.enum'
+import { EquipmentType } from '../../modules/enums/Equipment.enum'
 import { Equipment } from '../entities/Equipment.entity'
 
 async function seedEquipment(connection: Connection) {

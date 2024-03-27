@@ -3,3 +3,7 @@ export const errorMessages = {
   generateUpdateFailed: (entity: string) => `Error updating ${entity}`,
   generateFetchingError: (entity: string) => `Error fetching ${entity}`,
 }
+
+export function calculateOffset(limit: number, page: number): number {
+  return (page - 1) * limit
+}

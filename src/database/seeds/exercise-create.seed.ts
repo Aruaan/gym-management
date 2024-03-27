@@ -2,7 +2,7 @@ import { Connection } from 'typeorm'
 import { faker } from '@faker-js/faker'
 import { Exercise } from '../entities/Exercise.entity'
 import { Workout } from '../entities/Workout.entity'
-import { ExerciseType } from '../enums/Exercise.enum'
+import { ExerciseType } from '../../modules/enums/Exercise.enum'
 
 async function seedExercises(connection: Connection) {
   const exerciseRepository = connection.getRepository(Exercise)

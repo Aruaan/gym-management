@@ -1,7 +1,7 @@
 import { Connection } from 'typeorm'
 import { Workout } from '../entities/Workout.entity'
 import { faker } from '@faker-js/faker'
-import { WorkoutType } from '../enums/Workout.enum'
+import { WorkoutType } from '../../modules/enums/Workout.enum'
 import { Member } from '../entities/Member.entity'
 
 async function seedMembers(connection: Connection) {

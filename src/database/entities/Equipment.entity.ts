@@ -8,7 +8,7 @@ import {
   PrimaryGeneratedColumn,
 } from 'typeorm'
 import { Exercise } from './Exercise.entity'
-import { EquipmentType } from '../enums/Equipment.enum'
+import { EquipmentType } from '../../modules/enums/Equipment.enum'
 
 @Entity()
 export class Equipment extends BaseEntity {
