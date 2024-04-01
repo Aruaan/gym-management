@@ -1,8 +1,16 @@
-import { Column, CreateDateColumn, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm'
+import {
+  BeforeInsert,
+  Column,
+  CreateDateColumn,
+  Entity,
+  Index,
+  OneToMany,
+  PrimaryGeneratedColumn,
+} from 'typeorm'
 import { Workout } from './Workout.entity'
 import { Measurement } from './Measurement.entity'
 import { Meal } from './Meal.entity'
-
+import * as bcrypt from 'bcrypt'
 @Entity({ name: 'members' })
 export class Member {
   @PrimaryGeneratedColumn('uuid')
@@ -14,11 +22,21 @@ export class Member {
   @Column({ length: 30, type: 'varchar', name: 'last_name' })
   lastName: string
 
-  @Column({ length: 50, type: 'varchar' })
+  @Column({ length: 100, type: 'varchar' })
+  @Index({ unique: true })
   email: string
+
+  @Column({ length: 500, type: 'varchar' })
+  password: string
 
   @CreateDateColumn({ type: 'timestamp', name: 'join_date' })
   joinDate: Date
+
+  @BeforeInsert()
+  async hashPassword(): Promise<void> {
+    const salt = await bcrypt.genSalt()
+    this.password = await bcrypt.hash(this.password, salt)
+  }
 
   @OneToMany(() => Workout, (workout) => workout.member)
   workouts?: Workout[]
