@@ -1,13 +1,12 @@
-import { Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common'
+import { Injectable } from '@nestjs/common'
 import { Measurement } from '../../database/entities/Measurement.entity'
-import { PaginationRequestDto } from '../members/dto/pagination-request.dto'
 import { DataSource, Repository } from 'typeorm'
 import { CreateMeasurementDto } from './dto/create-measurement.dto'
-import {
-  calculateOffset,
-  errorMessages,
-} from '/Users/aleksa/Desktop/Projects/gym-backend/src/database/databaseUtil/utilFunctions'
 import { UpdateMeasurementDto } from './dto/update-measurement.dto'
+import { calculateOffset } from '../../database/databaseUtil/utilFunctions'
+import { PaginationWithFilterDto } from '../members/dto/pagination-member-filter.dto'
+import { PaginatedMeasurementResult } from './dto/paginated-measurement'
+import { measurementAlias } from '../../database/databaseUtil/aliases'
 
 @Injectable()
 export class MeasurementRepository extends Repository<Measurement> {
@@ -20,65 +19,38 @@ export class MeasurementRepository extends Repository<Measurement> {
     return await this.save(newMeasurement)
   }
 
-  async findAllMeasurements(
-    paginationRequest: PaginationRequestDto
-  ): Promise<[Measurement[], number]> {
-    const { limit, page } = paginationRequest
+  async findAllMeasurementsWithFilter(
+    paginationWithFilter: PaginationWithFilterDto
+  ): Promise<PaginatedMeasurementResult> {
+    const { limit, page, memberId } = paginationWithFilter
     const offset = calculateOffset(limit, page)
 
-    const queryBuilder = this.createQueryBuilder('measurement')
-
-    try {
-      const [measurements, total] = await queryBuilder.skip(offset).take(limit).getManyAndCount()
-      return [measurements, total]
-    } catch (error) {
-      throw new NotFoundException(errorMessages.generateEntityNotFound('Measurements'))
+    let queryBuilder = this.createQueryBuilder(measurementAlias).skip(offset).limit(limit)
+    if (memberId) {
+      queryBuilder = queryBuilder.where('measurement.member_id = :memberId', { memberId })
     }
+
+    const [measurements, total] = await queryBuilder.getManyAndCount()
+    const totalPages = Math.ceil(total / limit)
+    return { data: measurements, limit, offset, total, totalPages }
   }
 
-  async findByIdOrThrow(id: string): Promise<Measurement> {
-    const measurement = await this.findOne({
-      where: { id: id },
-    })
-    if (!measurement)
-      throw new NotFoundException(errorMessages.generateEntityNotFound('Measurement'))
-    return measurement
-  }
-
-  async findAllByMemberIdOrThrow(
-    memberId: string,
-    paginationRequest: PaginationRequestDto
-  ): Promise<[Measurement[], number]> {
-    const { limit, page } = paginationRequest
-    const offset = calculateOffset(limit, page)
-
-    const query = this.createQueryBuilder('measurement')
-      .where('measurement.memberId = :memberId', { memberId })
-      .skip(offset)
-      .take(limit)
-    const [measurements, total] = await query.getManyAndCount()
-    return [measurements, total]
+  async findById(id: string): Promise<Measurement> {
+    return await this.findOneBy({ id })
   }
 
   async updateMeasurement(
     id: string,
     updateMeasurementDto: UpdateMeasurementDto
   ): Promise<Measurement> {
-    const measurement = await this.findByIdOrThrow(id)
+    const measurement = await this.findById(id)
     const updated = Object.assign(measurement, updateMeasurementDto)
 
-    try {
-      await this.save(updated)
-      return updated
-    } catch (error) {
-      throw new InternalServerErrorException(errorMessages.generateUpdateFailed('measurement'))
-    }
+    await this.save(updated)
+    return updated
   }
 
   async deleteMeasurement(id: string): Promise<void> {
-    const result = await this.delete(id)
-    if (result.affected === 0) {
-      throw new NotFoundException(errorMessages.generateEntityNotFound('Measurement'))
-    }
+    await this.delete(id)
   }
 }

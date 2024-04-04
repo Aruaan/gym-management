@@ -1,11 +1,23 @@
-import { Controller, Get, Param, Query, Post, Body, Patch, Delete } from '@nestjs/common'
-import { ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger'
-import { PaginationRequestDto } from '../members/dto/pagination-request.dto'
+import {
+  Controller,
+  Get,
+  Param,
+  Query,
+  Post,
+  Body,
+  Patch,
+  Delete,
+  InternalServerErrorException,
+  ParseUUIDPipe,
+} from '@nestjs/common'
+import { ApiOperation, ApiTags } from '@nestjs/swagger'
 import { PaginatedMeasurementResult } from './dto/paginated-measurement'
 import { Measurement } from '../../database/entities/Measurement.entity'
 import { MeasurementService } from './measurement.service'
 import { CreateMeasurementDto } from './dto/create-measurement.dto'
 import { UpdateMeasurementDto } from './dto/update-measurement.dto'
+import { errorMessages } from '../../database/databaseUtil/utilFunctions'
+import { PaginationWithFilterDto } from '../members/dto/pagination-member-filter.dto'
 @ApiTags('measurements')
 @Controller('measurements')
 export class MeasurementController {
@@ -17,15 +29,14 @@ export class MeasurementController {
     description:
       'Retrieves a list of measurements with pagination. You can specify the number of results to return (limit) and an offset for pagination. Retrieves a list of all measurements logged by a single member if a memberID is queried.',
   })
-  @ApiQuery({ name: 'memberId', required: false, type: String })
   async findAll(
-    @Query() paginationRequest: PaginationRequestDto,
-    @Query('memberId') memberId?: string
+    @Query() filteredPaginationRequest: PaginationWithFilterDto
   ): Promise<PaginatedMeasurementResult> {
-    if (memberId) {
-      return this.measurementService.findAllByMemberIdOrThrow(memberId, paginationRequest)
+    try {
+      return await this.measurementService.findAllMeasurementsWithFilter(filteredPaginationRequest)
+    } catch (error) {
+      throw new InternalServerErrorException(errorMessages.generateFetchingError('measurements'))
     }
-    return this.measurementService.findAllMeasurements(paginationRequest)
   }
 
   @Get(':id')
@@ -34,7 +45,7 @@ export class MeasurementController {
     description:
       'Returns a measurement by ID. Returns "Not Found" if measurement with that ID does not exist.',
   })
-  async findById(@Param('id') id: string): Promise<Measurement> {
+  async findById(@Param('id', ParseUUIDPipe) id: string): Promise<Measurement> {
     return this.measurementService.findByIdOrThrow(id)
   }
 
@@ -47,37 +58,25 @@ export class MeasurementController {
     return this.measurementService.addMeasurement(createMeasurementDto)
   }
 
-  @Patch('update/:id')
+  @Patch(':id')
   @ApiOperation({
     summary: 'Update Measurement',
     description:
       'Updates the details of a measurement specified by its ID using the provided data.',
   })
   async updateMeasurement(
-    @Param('id') id: string,
+    @Param('id', ParseUUIDPipe) id: string,
     @Body() updateMeasurementDto: UpdateMeasurementDto
   ): Promise<Measurement> {
     return this.measurementService.updateMeasurement(id, updateMeasurementDto)
   }
 
-  @Delete('delete/:id')
+  @Delete(':id')
   @ApiOperation({
     summary: 'Delete Measurement',
     description: 'Deletes a measurement by ID.',
   })
-  async deleteMeasurement(@Param('id') id: string): Promise<void> {
+  async deleteMeasurement(@Param('id', ParseUUIDPipe) id: string): Promise<void> {
     return this.measurementService.deleteMeasurement(id)
-  }
-
-  @Get('member/:memberId')
-  @ApiOperation({
-    summary: 'Find Measurements By Member Id',
-    description: 'Returns a list of measurements logged by a single member.',
-  })
-  async findAllByMemberId(
-    @Param('memberId') memberId: string,
-    @Query() paginationRequest: PaginationRequestDto
-  ): Promise<PaginatedMeasurementResult> {
-    return this.measurementService.findAllByMemberIdOrThrow(memberId, paginationRequest)
   }
 }

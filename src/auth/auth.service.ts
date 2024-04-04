@@ -42,8 +42,21 @@ export class AuthService {
       throw new UnauthorizedException('Invalid credentials')
     }
     const { password, ...result } = member
+    return result
+  }
+
+  async login(member: Member) {
+    const payload = {
+      email: member.email,
+      sub: {
+        firstName: member.firstName,
+        lastName: member.lastName,
+      },
+    }
+
     return {
-      access_token: this.jwtService.sign(result),
+      ...member,
+      accessToken: this.jwtService.sign(payload),
     }
   }
 }

@@ -1,16 +1,13 @@
 import { Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
 import { MealRepository } from './meal.repository'
-import { PaginationRequestDto } from '../members/dto/pagination-request.dto'
 import { PaginatedMealResult } from './dto/paginated-meal.dto'
 import { Meal } from '../../database/entities/Meal.entity'
 import { CreateMealDto } from './dto/create-meal.dto'
 import { UpdateMealDto } from './dto/update-meal.dto'
-import {
-  calculateOffset,
-  errorMessages,
-} from '/Users/aleksa/Desktop/Projects/gym-backend/src/database/databaseUtil/utilFunctions'
 import { DataSource } from 'typeorm'
+import { errorMessages } from '../../database/databaseUtil/utilFunctions'
+import { PaginationWithFilterDto } from '../members/dto/pagination-member-filter.dto'
 
 @Injectable()
 export class MealService {
@@ -20,90 +17,49 @@ export class MealService {
     private readonly mealRepository: MealRepository
   ) {}
 
-  async findAllMeals(paginationRequestDto: PaginationRequestDto): Promise<PaginatedMealResult> {
+  async findAllMealsWithFilter(
+    paginationWithFilter: PaginationWithFilterDto
+  ): Promise<PaginatedMealResult> {
     try {
-      const { limit, page } = paginationRequestDto
-      const offset = calculateOffset(limit, page)
-      console.log(offset, limit, page)
-      const [meals, total] = await this.mealRepository.findAll({ skip: offset, take: limit })
-      const totalPages = Math.ceil(total / limit)
-      return { data: meals, limit, offset, total, totalPages }
-    } catch (error) {
-      console.error(error)
+      return this.mealRepository.findAllMealsWithFilter({
+        limit: paginationWithFilter.limit,
+        page: paginationWithFilter.page,
+        memberId: paginationWithFilter.memberId || null,
+      })
+    } catch (err) {
       throw new InternalServerErrorException(errorMessages.generateFetchingError('meals'))
     }
   }
 
   async findByIdOrThrow(id: string): Promise<Meal> {
-    const meal = await this.mealRepository.findByIdOrThrow(id)
+    const meal = await this.mealRepository.findById(id)
     if (!meal) {
-      throw new NotFoundException(`Meal with ID ${id} not found`)
+      throw new NotFoundException(errorMessages.generateEntityNotFound('Meal'))
     }
     return meal
   }
 
-  async findAllByMemberIdOrThrow(
-    memberId: string,
-    paginationRequest: PaginationRequestDto
-  ): Promise<PaginatedMealResult> {
-    const { limit, page } = paginationRequest
-    const offset = calculateOffset(limit, page)
-
-    const [meals, total] = await this.mealRepository.findAllByMemberIdOrThrow(
-      memberId,
-      paginationRequest
-    )
-    const totalPages = Math.ceil(total / limit)
-    return { data: meals, limit, offset, total, totalPages }
-  }
-
   async addMeal(createMealDto: CreateMealDto): Promise<Meal> {
-    const queryRunner = this.dataSource.createQueryRunner()
-    await queryRunner.connect()
-    await queryRunner.startTransaction()
-
     try {
-      const meal = this.mealRepository.create(createMealDto)
-      const savedMeal = await queryRunner.manager.save(meal)
-      await queryRunner.commitTransaction()
-      return savedMeal
+      return this.mealRepository.createAndSave(createMealDto)
     } catch (err) {
-      await queryRunner.rollbackTransaction()
-      throw err
-    } finally {
-      await queryRunner.release()
+      throw new InternalServerErrorException('Error adding meal.')
     }
   }
 
   async updateMeal(id: string, updateMealDto: UpdateMealDto): Promise<Meal> {
-    const queryRunner = this.dataSource.createQueryRunner()
-
-    await queryRunner.connect()
-    await queryRunner.startTransaction()
-
+    if (!(await this.findByIdOrThrow(id)))
+      throw new NotFoundException(errorMessages.generateEntityNotFound('Meal'))
     try {
-      const meal = await queryRunner.manager.findOne(Meal, { where: { id } })
-
-      if (!meal) {
-        throw new NotFoundException(`Meal with ID ${id} not found`)
-      }
-
-      Object.assign(meal, updateMealDto)
-
-      await queryRunner.manager.save(meal)
-
-      await queryRunner.commitTransaction()
-      return meal
-    } catch (error) {
-      await queryRunner.rollbackTransaction()
-      throw error
-    } finally {
-      await queryRunner.release()
+      return await this.mealRepository.updateMeal(id, updateMealDto)
+    } catch (err) {
+      throw new InternalServerErrorException(errorMessages.generateUpdateFailed('meal'))
     }
   }
 
   async deleteMeal(id: string): Promise<void> {
-    const meal = await this.findByIdOrThrow(id)
-    await this.mealRepository.remove(meal)
+    if (!(await this.findByIdOrThrow(id)))
+      throw new NotFoundException(errorMessages.generateEntityNotFound('Meal'))
+    return await this.mealRepository.deleteMeal(id)
   }
 }

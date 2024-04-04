@@ -1,7 +1,6 @@
 import { IsDate, IsNotEmpty, IsNumber, IsOptional, IsString, IsUUID, Length } from 'class-validator'
 
 export class CreateMealDto {
-  @IsNotEmpty()
   @IsUUID()
   memberId: string
 
@@ -21,5 +20,5 @@ export class CreateMealDto {
 
   @IsDate()
   @IsOptional()
-  createdAt: Date
+  createdAt?: Date
 }

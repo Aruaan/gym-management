@@ -12,7 +12,6 @@ import { AuthService } from './auth.service'
 import { Request } from 'express'
 import { JwtAuthGuard } from './guards/jwt.guard'
 import { CreateMemberDto } from '/Users/aleksa/Desktop/Projects/gym-backend/src/modules/members/dto/create-member.dto'
-import { AuthPayloadDto } from './dto/auth.dto'
 @Controller('auth')
 export class AuthController {
   constructor(private authService: AuthService) {}
@@ -29,12 +28,6 @@ export class AuthController {
       console.log(err)
       throw new HttpException('Signup failed', HttpStatus.BAD_REQUEST)
     }
-  }
-
-  @Post('login')
-  async login(@Body() authPayloadDto: AuthPayloadDto) {
-    const { access_token } = await this.authService.validateUser(authPayloadDto)
-    return { access_token }
   }
 
   @Get('status')

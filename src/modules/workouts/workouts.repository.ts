@@ -1,13 +1,12 @@
-import { Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common'
+import { Injectable } from '@nestjs/common'
 import { DataSource, Repository } from 'typeorm'
 import { Workout } from '../../database/entities/Workout.entity'
 import { CreateWorkoutDto } from './dto/create-workout.dto'
-import { PaginationRequestDto } from '../members/dto/pagination-request.dto'
-import {
-  calculateOffset,
-  errorMessages,
-} from '/Users/aleksa/Desktop/Projects/gym-backend/src/database/databaseUtil/utilFunctions'
 import { UpdateWorkoutDto } from './dto/update-workout.dto'
+import { calculateOffset } from '../../database/databaseUtil/utilFunctions'
+import { PaginationWithFilterDto } from '../members/dto/pagination-member-filter.dto'
+import { PaginatedWorkoutResult } from './dto/paginated-workout.dto'
+import { workoutAlias } from '../../database/databaseUtil/aliases'
 
 @Injectable()
 export class WorkoutRepository extends Repository<Workout> {
@@ -20,57 +19,33 @@ export class WorkoutRepository extends Repository<Workout> {
     return await this.save(newWorkout)
   }
 
-  async findAllWorkouts(paginationRequest: PaginationRequestDto): Promise<[Workout[], number]> {
-    const { limit, page } = paginationRequest
-    const queryBuilder = this.createQueryBuilder('workout')
+  async findAllWorkoutsWithFilter(
+    paginationWithFilter: PaginationWithFilterDto
+  ): Promise<PaginatedWorkoutResult> {
+    const { limit, page, memberId } = paginationWithFilter
     const offset = calculateOffset(limit, page)
-
-    try {
-      const [workouts, total] = await queryBuilder.skip(offset).take(limit).getManyAndCount()
-      return [workouts, total]
-    } catch (error) {
-      throw new NotFoundException(errorMessages.generateEntityNotFound('Workouts'))
+    let queryBuilder = this.createQueryBuilder(workoutAlias).skip(offset).limit(limit)
+    if (memberId) {
+      queryBuilder = queryBuilder.where('workout.member_id = :memberId', { memberId })
     }
+    const [workouts, total] = await queryBuilder.getManyAndCount()
+    const totalPages = Math.ceil(total / limit)
+    return { data: workouts, limit, offset, total, totalPages }
   }
 
-  async findByIdOrThrow(id: string): Promise<Workout> {
-    const workout = await this.findOne({
-      where: { id: id },
-    })
-    if (!workout) throw new NotFoundException(errorMessages.generateEntityNotFound('Workout'))
-    return workout
-  }
-
-  async findAllByMemberId(
-    paginationRequest: PaginationRequestDto,
-    memberId: string
-  ): Promise<[Workout[], number]> {
-    const { limit, page } = paginationRequest
-    const offset = calculateOffset(limit, page)
-    const query = this.createQueryBuilder('workout')
-      .where('workout.memberId = :memberId', { memberId })
-      .skip(offset)
-      .take(limit)
-    const [workouts, total] = await query.getManyAndCount()
-    return [workouts, total]
+  async findById(id: string): Promise<Workout> {
+    return await this.findOneBy({ id })
   }
 
   async updateWorkout(id: string, updateWorkoutDto: UpdateWorkoutDto): Promise<Workout> {
-    const workout = await this.findByIdOrThrow(id)
+    const workout = await this.findById(id)
     const updated = Object.assign(workout, updateWorkoutDto)
 
-    try {
-      await this.save(updated)
-      return updated
-    } catch (error) {
-      throw new InternalServerErrorException(errorMessages.generateUpdateFailed('workout'))
-    }
+    await this.save(updated)
+    return updated
   }
 
   async deleteWorkout(id: string): Promise<void> {
-    const result = await this.delete(id)
-    if (result.affected === 0) {
-      throw new NotFoundException(errorMessages.generateEntityNotFound('Workout'))
-    }
+    await this.delete(id)
   }
 }

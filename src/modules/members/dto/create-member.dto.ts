@@ -17,7 +17,7 @@ export class CreateMemberDto {
   email: string
 
   @IsString()
-  @MaxLength(500) // Adjust to match the length of the password column in the Member entity
+  @MaxLength(500)
   @IsNotEmpty()
   password: string
 }

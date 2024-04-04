@@ -8,7 +8,6 @@ export class CreateEquipmentDto {
   name: string
 
   @IsEnum(EquipmentType)
-  @IsNotEmpty()
   type: EquipmentType
 
   @IsOptional()

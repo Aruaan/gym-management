@@ -1,14 +1,12 @@
-import { Optional } from '@nestjs/common'
 import { IsDate, IsNumber, IsOptional, IsUUID, IsNotEmpty } from 'class-validator'
 
 export class CreateMeasurementDto {
   @IsUUID()
-  @IsNotEmpty()
   memberId: string
 
   @IsDate()
-  @Optional()
-  createdAt: Date
+  @IsOptional()
+  createdAt?: Date
 
   @IsNumber()
   @IsNotEmpty()
@@ -16,5 +14,5 @@ export class CreateMeasurementDto {
 
   @IsNumber()
   @IsOptional()
-  bodyFatPercentage: number | null
+  bodyFatPercentage?: number | null
 }

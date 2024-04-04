@@ -9,6 +9,7 @@ import {
   InternalServerErrorException,
   NotFoundException,
   Param,
+  ParseUUIDPipe,
   Patch,
   Post,
   Query,
@@ -16,11 +17,11 @@ import {
 import { MealService } from './meal.service'
 import { ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger'
 import { errorMessages } from '../../database/databaseUtil/utilFunctions'
-import { PaginationRequestDto } from '../members/dto/pagination-request.dto'
 import { PaginatedMealResult } from './dto/paginated-meal.dto'
 import { Meal } from '../../database/entities/Meal.entity'
 import { CreateMealDto } from './dto/create-meal.dto'
 import { UpdateMealDto } from './dto/update-meal.dto'
+import { PaginationWithFilterDto } from '../members/dto/pagination-member-filter.dto'
 @ApiTags('meals')
 @Controller('meals')
 export class MealController {
@@ -34,24 +35,16 @@ export class MealController {
   })
   @ApiQuery({ name: 'memberId', required: false, type: String })
   async findAll(
-    @Query() paginationRequest: PaginationRequestDto,
-    @Query('memberId') memberId?: string
+    @Query() filteredpaginationRequest: PaginationWithFilterDto
   ): Promise<PaginatedMealResult> {
-    console.log('findAll controller endpoint reached')
-
-    if (memberId)
-      return this.mealService.findAllByMemberIdOrThrow(memberId, paginationRequest).catch(() => {
-        throw new HttpException(
-          errorMessages.generateFetchingError('meals'),
-          HttpStatus.INTERNAL_SERVER_ERROR
-        )
-      })
-    return this.mealService.findAllMeals(paginationRequest).catch(() => {
+    try {
+      return await this.mealService.findAllMealsWithFilter(filteredpaginationRequest)
+    } catch (error) {
       throw new HttpException(
         errorMessages.generateFetchingError('meals'),
         HttpStatus.INTERNAL_SERVER_ERROR
       )
-    })
+    }
   }
 
   @Get(':id')
@@ -59,7 +52,7 @@ export class MealController {
     summary: 'Find Meal By Id',
     description: 'Returns a meal by ID. Returns "Not Found" if meal with that ID does not exist.',
   })
-  async findById(@Param('id') id: string): Promise<Meal> {
+  async findById(@Param('id', ParseUUIDPipe) id: string): Promise<Meal> {
     const meal = await this.mealService.findByIdOrThrow(id)
     if (!meal) {
       throw new NotFoundException(`Meal with ID ${id} not found`)
@@ -77,13 +70,16 @@ export class MealController {
     return this.mealService.addMeal(createMealDto)
   }
 
-  @Patch('update/:id')
+  @Patch(':id')
   @ApiOperation({
     summary: 'Update Existing Meal',
     description:
       'Updates the details of a meal specified by its ID using the provided data. Returns "Not Found" if meal with that ID does not exist.',
   })
-  async updateMeal(@Param('id') id: string, @Body() updateMealDto: UpdateMealDto): Promise<Meal> {
+  async updateMeal(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() updateMealDto: UpdateMealDto
+  ): Promise<Meal> {
     const updatedMeal = await this.mealService.updateMeal(id, updateMealDto)
 
     if (!updatedMeal) {
@@ -92,7 +88,7 @@ export class MealController {
     return updatedMeal
   }
 
-  @Delete('delete/:id')
+  @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({
     summary: 'Delete An Existing Meal',

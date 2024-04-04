@@ -1,0 +1,6 @@
+export const workoutAlias = 'workout'
+export const exerciseAlias = 'exercise'
+export const mealAlias = 'meal'
+export const memberAlias = 'member'
+export const measurementAlias = 'measurement'
+export const equipmentAlias = 'equipment'

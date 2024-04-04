@@ -9,6 +9,7 @@ import {
   InternalServerErrorException,
   NotFoundException,
   Param,
+  ParseUUIDPipe,
   Patch,
   Post,
   Query,
@@ -48,7 +49,7 @@ export class EquipmentController {
     description:
       'Returns equipment by ID. Returns "Not Found" if equipment with that ID does not exist.',
   })
-  async findById(@Param('id') id: string): Promise<Equipment> {
+  async findById(@Param('id', ParseUUIDPipe) id: string): Promise<Equipment> {
     const equipment = await this.equipmentService.findByIdOrThrow(id)
     if (!equipment) {
       throw new NotFoundException(`Equipment with ID ${id} not found`)
@@ -66,14 +67,14 @@ export class EquipmentController {
     return this.equipmentService.addEquipment(createEquipmentDto)
   }
 
-  @Patch('update/:id')
+  @Patch(':id')
   @ApiOperation({
     summary: 'Update Existing Equipment',
     description:
       'Updates the details of equipment specified by its ID using the provided data. Returns "Not Found" if equipment with that ID does not exist.',
   })
   async updateEquipment(
-    @Param('id') id: string,
+    @Param('id', ParseUUIDPipe) id: string,
     @Body() updateEquipmentDto: UpdateEquipmentDto
   ): Promise<Equipment> {
     const updatedEquipment = await this.equipmentService.updateEquipment(id, updateEquipmentDto)
@@ -84,14 +85,14 @@ export class EquipmentController {
     return updatedEquipment
   }
 
-  @Delete('delete/:id')
+  @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({
     summary: 'Delete An Existing Equipment',
     description:
       'Deletes equipment by ID. If successful return status 204, otherwise a not found exception.',
   })
-  async deleteEquipment(@Param('id') id: string): Promise<void> {
+  async deleteEquipment(@Param('id', ParseUUIDPipe) id: string): Promise<void> {
     try {
       await this.equipmentService.deleteEquipment(id)
     } catch (error) {

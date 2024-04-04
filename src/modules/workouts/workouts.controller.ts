@@ -12,15 +12,16 @@ import {
   Body,
   InternalServerErrorException,
   Post,
+  ParseUUIDPipe,
 } from '@nestjs/common'
 import { WorkoutService } from './workouts.service'
-import { ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger'
+import { ApiOperation, ApiTags } from '@nestjs/swagger'
 import { errorMessages } from '../../database/databaseUtil/utilFunctions'
-import { PaginationRequestDto } from '../members/dto/pagination-request.dto'
 import { PaginatedWorkoutResult } from './dto/paginated-workout.dto'
 import { Workout } from '../../database/entities/Workout.entity'
 import { UpdateWorkoutDto } from './dto/update-workout.dto'
 import { CreateWorkoutDto } from './dto/create-workout.dto'
+import { PaginationWithFilterDto } from '../members/dto/pagination-member-filter.dto'
 @ApiTags('workouts')
 @Controller('workouts')
 export class WorkoutController {
@@ -32,25 +33,18 @@ export class WorkoutController {
     description:
       'Retrieves a list of workouts with pagination. You can specify the number of results to return (limit) and an offset for pagination. Retrieves a list of all workouts logged by a single member if a memberID is queried.',
   })
-  @ApiQuery({ name: 'memberId', required: false, type: String })
   async findAll(
-    @Query('paginationRequest') paginationRequest?: PaginationRequestDto,
-    @Query('memberId') memberId?: string
+    @Query() paginationWithFilter: PaginationWithFilterDto
   ): Promise<PaginatedWorkoutResult> {
-    if (memberId)
-      return this.workoutService.findAllByMemberId(paginationRequest, memberId).catch(() => {
-        throw new HttpException(
-          errorMessages.generateFetchingError('workouts'),
-          HttpStatus.INTERNAL_SERVER_ERROR
-        )
-      })
-
-    return this.workoutService.findAllWorkouts(paginationRequest).catch(() => {
+    try {
+      return await this.workoutService.findAllWorkoutsWithFilter(paginationWithFilter)
+    } catch (error) {
+      console.error(error)
       throw new HttpException(
         errorMessages.generateFetchingError('workouts'),
         HttpStatus.INTERNAL_SERVER_ERROR
       )
-    })
+    }
   }
 
   @Get(':id')
@@ -59,7 +53,7 @@ export class WorkoutController {
     description:
       'Returns a workout by ID. Returns "Not Found" if workout with that ID does not exist.',
   })
-  async findById(@Param('id') id: string): Promise<Workout> {
+  async findById(@Param('id', ParseUUIDPipe) id: string): Promise<Workout> {
     const workout = await this.workoutService.findByIdOrThrow(id)
     if (!workout) {
       throw new NotFoundException(`Workout with ID ${id} not found`)
@@ -77,14 +71,14 @@ export class WorkoutController {
     return this.workoutService.addWorkout(createWorkoutDto)
   }
 
-  @Patch('update/:id')
+  @Patch(':id')
   @ApiOperation({
     summary: 'Update Existing Workout',
     description:
       'Updates the details of a workout specified by its ID using the provided data. Returns "Not Found" if workout with that ID does not exist.',
   })
   async updateWorkout(
-    @Param('id') id: string,
+    @Param('id', ParseUUIDPipe) id: string,
     @Body() updateWorkoutDto: UpdateWorkoutDto
   ): Promise<Workout> {
     const updatedWorkout = await this.workoutService.updateWorkout(id, updateWorkoutDto)
@@ -95,14 +89,14 @@ export class WorkoutController {
     return updatedWorkout
   }
 
-  @Delete('delete/:id')
+  @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({
     summary: 'Delete An Existing Workout',
     description:
       'Deletes a workout by ID. If successful return status 204, otherwise a not found exception.',
   })
-  async deleteWorkout(@Param('id') id: string): Promise<void> {
+  async deleteWorkout(@Param('id', ParseUUIDPipe) id: string): Promise<void> {
     try {
       await this.workoutService.deleteWorkout(id)
     } catch (error) {

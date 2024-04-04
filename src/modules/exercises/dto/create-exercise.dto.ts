@@ -4,11 +4,9 @@ import { ExerciseType } from '../../enums/Exercise.enum'
 
 export class CreateExerciseDto {
   @IsUUID()
-  @IsNotEmpty()
   workoutId: string
 
   @IsEnum(ExerciseType)
-  @IsNotEmpty()
   type: ExerciseType
 
   @IsString()

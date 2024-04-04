@@ -1,19 +1,12 @@
 import { Repository, DataSource } from 'typeorm'
 import { Equipment } from '../../database/entities/Equipment.entity'
 import { UpdateEquipmentDto } from './dto/update-equipment.dto'
-import {
-  ConflictException,
-  Injectable,
-  InternalServerErrorException,
-  NotFoundException,
-} from '@nestjs/common'
+import { Injectable } from '@nestjs/common'
 import { CreateEquipmentDto } from './dto/create-equipment.dto'
 import { PaginationRequestDto } from '../members/dto/pagination-request.dto'
-import {
-  calculateOffset,
-  errorMessages,
-} from '/Users/aleksa/Desktop/Projects/gym-backend/src/database/databaseUtil/utilFunctions'
-
+import { calculateOffset } from '../../database/databaseUtil/utilFunctions'
+import { equipmentAlias } from '../../database/databaseUtil/aliases'
+import { PaginatedEquipmentResult } from './dto/paginated-equipment.dto'
 @Injectable()
 export class EquipmentRepository extends Repository<Equipment> {
   constructor(private dataSource: DataSource) {
@@ -21,51 +14,35 @@ export class EquipmentRepository extends Repository<Equipment> {
   }
 
   async createAndSave(createEquipmentDto: CreateEquipmentDto): Promise<Equipment> {
-    const existingEquipment = await this.findOne({ where: { name: createEquipmentDto.name } })
-
-    if (existingEquipment) {
-      throw new ConflictException('Equipment with that name already exists.')
-    }
-
     const newEquipment = this.create(createEquipmentDto)
     return await this.save(newEquipment)
   }
 
-  async findAll(paginationRequest: PaginationRequestDto): Promise<[Equipment[], number]> {
+  async findAllEquipment(
+    paginationRequest: PaginationRequestDto
+  ): Promise<PaginatedEquipmentResult> {
     const { limit, page } = paginationRequest
     const offset = calculateOffset(limit, page)
-    const [equipment, total] = await Promise.all([
-      this.find({ skip: offset, take: limit }),
-      this.count(),
-    ])
+    const queryBuilder = this.createQueryBuilder(equipmentAlias).skip(offset).limit(limit)
 
-    return [equipment, total]
+    const [equipment, total] = await queryBuilder.getManyAndCount()
+    const totalPages = Math.ceil(total / limit)
+    return { data: equipment, limit, offset, total, totalPages }
   }
 
-  async findByIdOrThrow(id: string): Promise<Equipment> {
-    const equipment = await this.findOne({
-      where: { id: id },
-    })
-    if (!equipment) throw new NotFoundException(errorMessages.generateEntityNotFound('Equipment'))
-    return equipment
+  async findById(id: string): Promise<Equipment> {
+    return await this.findOneBy({ id })
   }
 
   async updateEquipment(id: string, updateEquipmentDto: UpdateEquipmentDto): Promise<Equipment> {
-    const equipment = await this.findByIdOrThrow(id)
+    const equipment = await this.findById(id)
     const updated = Object.assign(equipment, updateEquipmentDto)
 
-    try {
-      await this.save(updated)
-      return updated
-    } catch (error) {
-      throw new InternalServerErrorException(errorMessages.generateUpdateFailed('equipment'))
-    }
+    await this.save(updated)
+    return updated
   }
 
   async deleteEquipment(id: string): Promise<void> {
-    const result = await this.delete(id)
-    if (result.affected === 0) {
-      throw new NotFoundException(errorMessages.generateEntityNotFound('Equipment'))
-    }
+    await this.delete(id)
   }
 }

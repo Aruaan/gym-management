@@ -12,6 +12,7 @@ import {
   Query,
   HttpCode,
   InternalServerErrorException,
+  ParseUUIDPipe,
 } from '@nestjs/common'
 import { MemberService } from './members.service'
 import { ApiOperation, ApiTags } from '@nestjs/swagger'
@@ -21,7 +22,6 @@ import { Member } from '../../database/entities/Member.entity'
 import { PaginationRequestDto } from './dto/pagination-request.dto'
 import { errorMessages } from '../../database/databaseUtil/utilFunctions'
 import { UpdateMemberDto } from './dto/update-member.dto'
-import { Meal } from '../../database/entities/Meal.entity'
 @ApiTags('members')
 @Controller('members')
 export class MembersController {
@@ -48,7 +48,7 @@ export class MembersController {
     description:
       'Returns a member by ID. Returns "Not Found" if member with that ID does not exist.',
   })
-  async findById(@Param('id') id: string) {
+  async findById(@Param('id', ParseUUIDPipe) id: string) {
     const member = await this.memberService.findByIdOrThrow(id)
     if (!member) {
       throw new NotFoundException(`Member with ID ${id} not found`)
@@ -66,29 +66,14 @@ export class MembersController {
     return this.memberService.addMember(createMemberDto)
   }
 
-  @Post('add-and-update-meal')
-  async addMemberAndUpdateMeal(
-    @Body() createMemberDto: CreateMemberDto,
-    @Query('mealId') mealId: string
-  ): Promise<Meal> {
-    try {
-      return await this.memberService.addMemberAndUpdateMeal(createMemberDto, mealId)
-    } catch (error) {
-      throw new HttpException(
-        'Failed to create member and update meal',
-        HttpStatus.INTERNAL_SERVER_ERROR
-      )
-    }
-  }
-
-  @Patch('update/:id')
+  @Patch(':id')
   @ApiOperation({
     summary: 'Update Existing Member',
     description:
       'Updates the details of a member specified by their ID using the provided data.Returns "Not Found" if member with that ID does not exist.',
   })
   async updateMember(
-    @Param('id') id: string,
+    @Param('id', ParseUUIDPipe) id: string,
     @Body() updateMemberDto: UpdateMemberDto
   ): Promise<Member> {
     const updatedMember = this.memberService.updateMember(id, updateMemberDto)
@@ -99,14 +84,14 @@ export class MembersController {
     return updatedMember
   }
 
-  @Delete('delete/:id')
+  @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({
     summary: 'Delete An Existing Member',
     description:
       'Deletes a member by ID. If successful return status 204, otherwise a not found exception.',
   })
-  async deleteMember(@Param('id') id: string): Promise<void> {
+  async deleteMember(@Param('id', ParseUUIDPipe) id: string): Promise<void> {
     try {
       await this.memberService.deleteMember(id)
     } catch (error) {
