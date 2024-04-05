@@ -4,7 +4,7 @@ import { Workout } from '../../database/entities/Workout.entity'
 import { CreateWorkoutDto } from './dto/create-workout.dto'
 import { UpdateWorkoutDto } from './dto/update-workout.dto'
 import { calculateOffset } from '../../database/databaseUtil/utilFunctions'
-import { PaginationWithFilterDto } from '../members/dto/pagination-member-filter.dto'
+import { PaginationWithFilterDto } from '../universaldtos/pagination-member-filter.dto'
 import { PaginatedWorkoutResult } from './dto/paginated-workout.dto'
 import { workoutAlias } from '../../database/databaseUtil/aliases'
 

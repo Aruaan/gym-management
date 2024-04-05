@@ -4,7 +4,7 @@ import { UpdateMemberDto } from './dto/update-member.dto'
 import { Injectable } from '@nestjs/common'
 import { CreateMemberDto } from './dto/create-member.dto'
 import { calculateOffset } from '../../database/databaseUtil/utilFunctions'
-import { PaginationRequestDto } from './dto/pagination-request.dto'
+import { PaginationRequestDto } from '../universaldtos/pagination-request.dto'
 import { PaginatedMemberResult } from './dto/paginated-member.dto'
 import { memberAlias } from '../../database/databaseUtil/aliases'
 @Injectable()

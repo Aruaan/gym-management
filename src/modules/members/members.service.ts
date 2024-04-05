@@ -5,7 +5,7 @@ import { InjectRepository } from '@nestjs/typeorm'
 import { UpdateMemberDto } from './dto/update-member.dto'
 import { Member } from '../../database/entities/Member.entity'
 import { CreateMemberDto } from './dto/create-member.dto'
-import { PaginationRequestDto } from './dto/pagination-request.dto'
+import { PaginationRequestDto } from '../universaldtos/pagination-request.dto'
 import { DataSource } from 'typeorm'
 import { errorMessages } from '../../database/databaseUtil/utilFunctions'
 @Injectable()

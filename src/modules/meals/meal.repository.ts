@@ -4,7 +4,7 @@ import { DataSource, Repository } from 'typeorm'
 import { CreateMealDto } from './dto/create-meal.dto'
 import { UpdateMealDto } from './dto/update-meal.dto'
 import { calculateOffset } from '../../database/databaseUtil/utilFunctions'
-import { PaginationWithFilterDto } from '../members/dto/pagination-member-filter.dto'
+import { PaginationWithFilterDto } from '../universaldtos/pagination-member-filter.dto'
 import { PaginatedMealResult } from './dto/paginated-meal.dto'
 import { mealAlias } from '../../database/databaseUtil/aliases'
 

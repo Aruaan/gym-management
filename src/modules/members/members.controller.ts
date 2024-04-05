@@ -19,7 +19,7 @@ import { ApiOperation, ApiTags } from '@nestjs/swagger'
 import { PaginatedMemberResult } from './dto/paginated-member.dto'
 import { CreateMemberDto } from './dto/create-member.dto'
 import { Member } from '../../database/entities/Member.entity'
-import { PaginationRequestDto } from './dto/pagination-request.dto'
+import { PaginationRequestDto } from '../universaldtos/pagination-request.dto'
 import { errorMessages } from '../../database/databaseUtil/utilFunctions'
 import { UpdateMemberDto } from './dto/update-member.dto'
 @ApiTags('members')

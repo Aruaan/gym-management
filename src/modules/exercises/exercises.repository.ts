@@ -5,7 +5,7 @@ import { PaginatedExerciseResult } from './dto/paginated-exercise.dto'
 import { UpdateExerciseDto } from './dto/update-exercise.dto'
 import { calculateOffset } from '/Users/aleksa/Desktop/Projects/gym-backend/src/database/databaseUtil/utilFunctions'
 import { CreateExerciseDto } from './dto/create-exercise.dto'
-import { PaginationWithFilterDto } from '../members/dto/pagination-member-filter.dto'
+import { PaginationWithFilterDto } from '../universaldtos/pagination-member-filter.dto'
 import { exerciseAlias } from '../../database/databaseUtil/aliases'
 
 @Injectable()

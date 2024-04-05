@@ -6,7 +6,7 @@ import { Measurement } from '../../database/entities/Measurement.entity'
 import { CreateMeasurementDto } from './dto/create-measurement.dto'
 import { UpdateMeasurementDto } from './dto/update-measurement.dto'
 import { errorMessages } from '../../database/databaseUtil/utilFunctions'
-import { PaginationWithFilterDto } from '../members/dto/pagination-member-filter.dto'
+import { PaginationWithFilterDto } from '../universaldtos/pagination-member-filter.dto'
 
 @Injectable()
 export class MeasurementService {

@@ -4,7 +4,7 @@ import { DataSource, Repository } from 'typeorm'
 import { CreateMeasurementDto } from './dto/create-measurement.dto'
 import { UpdateMeasurementDto } from './dto/update-measurement.dto'
 import { calculateOffset } from '../../database/databaseUtil/utilFunctions'
-import { PaginationWithFilterDto } from '../members/dto/pagination-member-filter.dto'
+import { PaginationWithFilterDto } from '../universaldtos/pagination-member-filter.dto'
 import { PaginatedMeasurementResult } from './dto/paginated-measurement'
 import { measurementAlias } from '../../database/databaseUtil/aliases'
 

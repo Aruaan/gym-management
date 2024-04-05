@@ -20,7 +20,7 @@ import { Exercise } from '../../database/entities/Exercise.entity'
 import { ExerciseService } from './exercises.service'
 import { CreateExerciseDto } from './dto/create-exercise.dto'
 import { PaginatedExerciseResult } from './dto/paginated-exercise.dto'
-import { PaginationWithFilterDto } from '../members/dto/pagination-member-filter.dto'
+import { PaginationWithFilterDto } from '../universaldtos/pagination-member-filter.dto'
 @ApiTags('exercises')
 @Controller('exercises')
 export class ExerciseController {

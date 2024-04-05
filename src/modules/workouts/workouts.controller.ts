@@ -21,7 +21,7 @@ import { PaginatedWorkoutResult } from './dto/paginated-workout.dto'
 import { Workout } from '../../database/entities/Workout.entity'
 import { UpdateWorkoutDto } from './dto/update-workout.dto'
 import { CreateWorkoutDto } from './dto/create-workout.dto'
-import { PaginationWithFilterDto } from '../members/dto/pagination-member-filter.dto'
+import { PaginationWithFilterDto } from '../universaldtos/pagination-member-filter.dto'
 @ApiTags('workouts')
 @Controller('workouts')
 export class WorkoutController {

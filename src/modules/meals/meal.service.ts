@@ -7,7 +7,7 @@ import { CreateMealDto } from './dto/create-meal.dto'
 import { UpdateMealDto } from './dto/update-meal.dto'
 import { DataSource } from 'typeorm'
 import { errorMessages } from '../../database/databaseUtil/utilFunctions'
-import { PaginationWithFilterDto } from '../members/dto/pagination-member-filter.dto'
+import { PaginationWithFilterDto } from '../universaldtos/pagination-member-filter.dto'
 
 @Injectable()
 export class MealService {

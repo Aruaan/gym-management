@@ -4,10 +4,7 @@ import {
   Delete,
   Get,
   HttpCode,
-  HttpException,
   HttpStatus,
-  InternalServerErrorException,
-  NotFoundException,
   Param,
   ParseUUIDPipe,
   Patch,
@@ -15,13 +12,12 @@ import {
   Query,
 } from '@nestjs/common'
 import { ApiOperation, ApiTags } from '@nestjs/swagger'
-import { PaginationRequestDto } from '../members/dto/pagination-request.dto'
+import { PaginationRequestDto } from '../universaldtos/pagination-request.dto'
 import { CreateEquipmentDto } from './dto/create-equipment.dto'
 import { Equipment } from '../../database/entities/Equipment.entity'
-import { errorMessages } from '../../database/databaseUtil/utilFunctions'
 import { EquipmentService } from './equipment.service'
-import { PaginatedEquipmentResult } from './dto/paginated-equipment.dto'
 import { UpdateEquipmentDto } from './dto/update-equipment.dto'
+import { PaginatedResultDto } from '../universaldtos/paginated-result.dto'
 @ApiTags('equipments')
 @Controller('equipments')
 export class EquipmentController {
@@ -34,13 +30,8 @@ export class EquipmentController {
   })
   async findAll(
     @Query() paginationRequest: PaginationRequestDto
-  ): Promise<PaginatedEquipmentResult> {
-    return this.equipmentService.findAllEquipment(paginationRequest).catch(() => {
-      throw new HttpException(
-        errorMessages.generateFetchingError('equipment'),
-        HttpStatus.INTERNAL_SERVER_ERROR
-      )
-    })
+  ): Promise<PaginatedResultDto<Equipment>> {
+    return this.equipmentService.findAllEquipment(paginationRequest)
   }
 
   @Get(':id')
@@ -51,9 +42,6 @@ export class EquipmentController {
   })
   async findById(@Param('id', ParseUUIDPipe) id: string): Promise<Equipment> {
     const equipment = await this.equipmentService.findByIdOrThrow(id)
-    if (!equipment) {
-      throw new NotFoundException(`Equipment with ID ${id} not found`)
-    }
     return equipment
   }
 
@@ -73,16 +61,12 @@ export class EquipmentController {
     description:
       'Updates the details of equipment specified by its ID using the provided data. Returns "Not Found" if equipment with that ID does not exist.',
   })
+  @HttpCode(HttpStatus.NO_CONTENT)
   async updateEquipment(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() updateEquipmentDto: UpdateEquipmentDto
-  ): Promise<Equipment> {
-    const updatedEquipment = await this.equipmentService.updateEquipment(id, updateEquipmentDto)
-
-    if (!updatedEquipment) {
-      throw new NotFoundException(`Equipment with ID ${id} not found`)
-    }
-    return updatedEquipment
+  ): Promise<void> {
+    await this.equipmentService.updateEquipment(id, updateEquipmentDto)
   }
 
   @Delete(':id')
@@ -93,14 +77,6 @@ export class EquipmentController {
       'Deletes equipment by ID. If successful return status 204, otherwise a not found exception.',
   })
   async deleteEquipment(@Param('id', ParseUUIDPipe) id: string): Promise<void> {
-    try {
-      await this.equipmentService.deleteEquipment(id)
-    } catch (error) {
-      if (error instanceof NotFoundException) {
-        throw error
-      } else {
-        throw new InternalServerErrorException('Error deleting equipment')
-      }
-    }
+    await this.equipmentService.deleteEquipment(id)
   }
 }

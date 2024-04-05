@@ -21,7 +21,7 @@ import { PaginatedMealResult } from './dto/paginated-meal.dto'
 import { Meal } from '../../database/entities/Meal.entity'
 import { CreateMealDto } from './dto/create-meal.dto'
 import { UpdateMealDto } from './dto/update-meal.dto'
-import { PaginationWithFilterDto } from '../members/dto/pagination-member-filter.dto'
+import { PaginationWithFilterDto } from '../universaldtos/pagination-member-filter.dto'
 @ApiTags('meals')
 @Controller('meals')
 export class MealController {

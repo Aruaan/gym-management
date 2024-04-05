@@ -1,17 +1,12 @@
-import {
-  ConflictException,
-  Injectable,
-  InternalServerErrorException,
-  NotFoundException,
-} from '@nestjs/common'
+import { Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common'
 import { EquipmentRepository } from './equipment.repository'
-import { PaginatedEquipmentResult } from './dto/paginated-equipment.dto'
 import { InjectRepository } from '@nestjs/typeorm'
 import { UpdateEquipmentDto } from './dto/update-equipment.dto'
 import { Equipment } from '../../database/entities/Equipment.entity'
 import { CreateEquipmentDto } from './dto/create-equipment.dto'
-import { PaginationRequestDto } from '../members/dto/pagination-request.dto'
+import { PaginationRequestDto } from '../universaldtos/pagination-request.dto'
 import { errorMessages } from '../../database/databaseUtil/utilFunctions'
+import { PaginatedResultDto } from '../universaldtos/paginated-result.dto'
 
 @Injectable()
 export class EquipmentService {
@@ -21,9 +16,9 @@ export class EquipmentService {
 
   async findAllEquipment(
     paginationRequestDto: PaginationRequestDto
-  ): Promise<PaginatedEquipmentResult> {
+  ): Promise<PaginatedResultDto<Equipment>> {
     try {
-      return this.equipmentRepository.findAllEquipment({
+      return await this.equipmentRepository.findAllEquipment({
         limit: paginationRequestDto.limit,
         page: paginationRequestDto.page,
       })
@@ -33,12 +28,6 @@ export class EquipmentService {
   }
 
   async addEquipment(createEquipmentDto: CreateEquipmentDto) {
-    const existingEquipment = await this.equipmentRepository.findOneBy({
-      name: createEquipmentDto.name,
-    })
-    if (existingEquipment) {
-      throw new ConflictException('Equipment with that name already exists.')
-    }
     try {
       return this.equipmentRepository.createAndSave(createEquipmentDto)
     } catch (error) {
@@ -52,18 +41,25 @@ export class EquipmentService {
     return equipment
   }
 
-  async updateEquipment(id: string, updateEquipmentDto: UpdateEquipmentDto): Promise<Equipment> {
+  async updateEquipment(id: string, updateEquipmentDto: UpdateEquipmentDto): Promise<void> {
     try {
-      return await this.equipmentRepository.updateEquipment(id, updateEquipmentDto)
-    } catch (error) {
+      const updateResult = await this.equipmentRepository.updateEquipment(id, updateEquipmentDto)
+      if (updateResult.affected === 0) {
+        throw new NotFoundException(errorMessages.generateEntityNotFound('Equipment'))
+      }
+    } catch (err) {
       throw new InternalServerErrorException(errorMessages.generateUpdateFailed('equipment'))
     }
   }
 
   async deleteEquipment(id: string): Promise<void> {
-    if (!(await this.findByIdOrThrow(id)))
-      throw new NotFoundException(errorMessages.generateEntityNotFound('Equipment'))
-
-    return await this.equipmentRepository.deleteEquipment(id)
+    try {
+      const deleteResult = await this.equipmentRepository.deleteEquipment(id)
+      if (deleteResult.affected === 0) {
+        throw new NotFoundException(errorMessages.generateEntityNotFound('Equipment'))
+      }
+    } catch (error) {
+      throw new InternalServerErrorException(errorMessages.generateDeleteFailed('equipment'))
+    }
   }
 }

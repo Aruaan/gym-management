@@ -5,7 +5,7 @@ import { PaginatedExerciseResult } from './dto/paginated-exercise.dto'
 import { CreateExerciseDto } from './dto/create-exercise.dto'
 import { UpdateExerciseDto } from './dto/update-exercise.dto'
 import { Exercise } from '../../database/entities/Exercise.entity'
-import { PaginationWithFilterDto } from '../members/dto/pagination-member-filter.dto'
+import { PaginationWithFilterDto } from '../universaldtos/pagination-member-filter.dto'
 import { errorMessages } from '../../database/databaseUtil/utilFunctions'
 
 @Injectable()

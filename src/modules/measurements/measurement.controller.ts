@@ -17,7 +17,7 @@ import { MeasurementService } from './measurement.service'
 import { CreateMeasurementDto } from './dto/create-measurement.dto'
 import { UpdateMeasurementDto } from './dto/update-measurement.dto'
 import { errorMessages } from '../../database/databaseUtil/utilFunctions'
-import { PaginationWithFilterDto } from '../members/dto/pagination-member-filter.dto'
+import { PaginationWithFilterDto } from '../universaldtos/pagination-member-filter.dto'
 @ApiTags('measurements')
 @Controller('measurements')
 export class MeasurementController {

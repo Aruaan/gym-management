@@ -1,12 +1,12 @@
-import { Repository, DataSource } from 'typeorm'
+import { Repository, DataSource, UpdateResult, DeleteResult } from 'typeorm'
 import { Equipment } from '../../database/entities/Equipment.entity'
 import { UpdateEquipmentDto } from './dto/update-equipment.dto'
 import { Injectable } from '@nestjs/common'
 import { CreateEquipmentDto } from './dto/create-equipment.dto'
-import { PaginationRequestDto } from '../members/dto/pagination-request.dto'
+import { PaginationRequestDto } from '../universaldtos/pagination-request.dto'
 import { calculateOffset } from '../../database/databaseUtil/utilFunctions'
 import { equipmentAlias } from '../../database/databaseUtil/aliases'
-import { PaginatedEquipmentResult } from './dto/paginated-equipment.dto'
+import { PaginatedResultDto } from '../universaldtos/paginated-result.dto'
 @Injectable()
 export class EquipmentRepository extends Repository<Equipment> {
   constructor(private dataSource: DataSource) {
@@ -15,34 +15,32 @@ export class EquipmentRepository extends Repository<Equipment> {
 
   async createAndSave(createEquipmentDto: CreateEquipmentDto): Promise<Equipment> {
     const newEquipment = this.create(createEquipmentDto)
-    return await this.save(newEquipment)
+    return this.save(newEquipment)
   }
 
   async findAllEquipment(
     paginationRequest: PaginationRequestDto
-  ): Promise<PaginatedEquipmentResult> {
+  ): Promise<PaginatedResultDto<Equipment>> {
     const { limit, page } = paginationRequest
     const offset = calculateOffset(limit, page)
+
     const queryBuilder = this.createQueryBuilder(equipmentAlias).skip(offset).limit(limit)
 
-    const [equipment, total] = await queryBuilder.getManyAndCount()
-    const totalPages = Math.ceil(total / limit)
-    return { data: equipment, limit, offset, total, totalPages }
+    const [equipment, count] = await queryBuilder.getManyAndCount()
+    const totalPages = Math.ceil(count / limit)
+
+    return { data: equipment, limit, page, count, totalPages }
   }
 
   async findById(id: string): Promise<Equipment> {
-    return await this.findOneBy({ id })
+    return this.findOneBy({ id })
   }
 
-  async updateEquipment(id: string, updateEquipmentDto: UpdateEquipmentDto): Promise<Equipment> {
-    const equipment = await this.findById(id)
-    const updated = Object.assign(equipment, updateEquipmentDto)
-
-    await this.save(updated)
-    return updated
+  async updateEquipment(id: string, updateEquipmentDto: UpdateEquipmentDto): Promise<UpdateResult> {
+    return this.update(id, updateEquipmentDto)
   }
 
-  async deleteEquipment(id: string): Promise<void> {
-    await this.delete(id)
+  async deleteEquipment(id: string): Promise<DeleteResult> {
+    return this.delete(id)
   }
 }
