@@ -1,12 +1,12 @@
-import { Repository, DataSource } from 'typeorm'
+import { Repository, DataSource, UpdateResult, DeleteResult } from 'typeorm'
 import { Member } from '../../database/entities/Member.entity'
 import { UpdateMemberDto } from './dto/update-member.dto'
 import { Injectable } from '@nestjs/common'
 import { CreateMemberDto } from './dto/create-member.dto'
 import { calculateOffset } from '../../database/databaseUtil/utilFunctions'
 import { PaginationRequestDto } from '../universaldtos/pagination-request.dto'
-import { PaginatedMemberResult } from './dto/paginated-member.dto'
 import { memberAlias } from '../../database/databaseUtil/aliases'
+import { PaginatedResultDto } from '../universaldtos/paginated-result.dto'
 @Injectable()
 export class MemberRepository extends Repository<Member> {
   constructor(private dataSource: DataSource) {
@@ -17,29 +17,28 @@ export class MemberRepository extends Repository<Member> {
     return await this.save(newMember)
   }
 
-  async findAllMembers(paginationRequest: PaginationRequestDto): Promise<PaginatedMemberResult> {
+  async findAllMembers(
+    paginationRequest: PaginationRequestDto
+  ): Promise<PaginatedResultDto<Member>> {
     const { limit, page } = paginationRequest
     const offset = calculateOffset(limit, page)
+
     const queryBuilder = this.createQueryBuilder(memberAlias).skip(offset).limit(limit)
 
-    const [members, total] = await queryBuilder.getManyAndCount()
-    const totalPages = Math.ceil(total / limit)
-    return { data: members, limit, offset, total, totalPages }
+    const [members, count] = await queryBuilder.getManyAndCount()
+    const totalPages = Math.ceil(count / limit)
+    return { data: members, limit, page, count, totalPages }
   }
 
   async findById(id: string): Promise<Member> {
-    return await this.findOneBy({ id })
+    return this.findOneBy({ id })
   }
 
-  async updateMember(id: string, updateMemberDto: UpdateMemberDto): Promise<Member> {
-    const member = await this.findById(id)
-    const updated = Object.assign(member, updateMemberDto)
-
-    await this.save(updated)
-    return updated
+  async updateMember(id: string, updateMemberDto: UpdateMemberDto): Promise<UpdateResult> {
+    return this.update(id, updateMemberDto)
   }
 
-  async deleteMember(id: string): Promise<void> {
-    await this.delete(id)
+  async deleteMember(id: string): Promise<DeleteResult> {
+    return this.delete(id)
   }
 }

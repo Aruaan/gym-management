@@ -41,7 +41,7 @@ export class EquipmentController {
       'Returns equipment by ID. Returns "Not Found" if equipment with that ID does not exist.',
   })
   async findById(@Param('id', ParseUUIDPipe) id: string): Promise<Equipment> {
-    const equipment = await this.equipmentService.findByIdOrThrow(id)
+    const equipment = this.equipmentService.findByIdOrThrow(id)
     return equipment
   }
 
@@ -66,7 +66,7 @@ export class EquipmentController {
     @Param('id', ParseUUIDPipe) id: string,
     @Body() updateEquipmentDto: UpdateEquipmentDto
   ): Promise<void> {
-    await this.equipmentService.updateEquipment(id, updateEquipmentDto)
+    this.equipmentService.updateEquipment(id, updateEquipmentDto)
   }
 
   @Delete(':id')
@@ -77,6 +77,6 @@ export class EquipmentController {
       'Deletes equipment by ID. If successful return status 204, otherwise a not found exception.',
   })
   async deleteEquipment(@Param('id', ParseUUIDPipe) id: string): Promise<void> {
-    await this.equipmentService.deleteEquipment(id)
+    this.equipmentService.deleteEquipment(id)
   }
 }

@@ -1,13 +1,13 @@
 import { Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
 import { MealRepository } from './meal.repository'
-import { PaginatedMealResult } from './dto/paginated-meal.dto'
 import { Meal } from '../../database/entities/Meal.entity'
 import { CreateMealDto } from './dto/create-meal.dto'
 import { UpdateMealDto } from './dto/update-meal.dto'
 import { DataSource } from 'typeorm'
 import { errorMessages } from '../../database/databaseUtil/utilFunctions'
 import { PaginationWithFilterDto } from '../universaldtos/pagination-member-filter.dto'
+import { PaginatedResultDto } from '../universaldtos/paginated-result.dto'
 
 @Injectable()
 export class MealService {
@@ -19,7 +19,7 @@ export class MealService {
 
   async findAllMealsWithFilter(
     paginationWithFilter: PaginationWithFilterDto
-  ): Promise<PaginatedMealResult> {
+  ): Promise<PaginatedResultDto<Meal>> {
     try {
       return this.mealRepository.findAllMealsWithFilter({
         limit: paginationWithFilter.limit,
@@ -47,19 +47,25 @@ export class MealService {
     }
   }
 
-  async updateMeal(id: string, updateMealDto: UpdateMealDto): Promise<Meal> {
-    if (!(await this.findByIdOrThrow(id)))
-      throw new NotFoundException(errorMessages.generateEntityNotFound('Meal'))
+  async updateMeal(id: string, updateMealDto: UpdateMealDto): Promise<void> {
     try {
-      return await this.mealRepository.updateMeal(id, updateMealDto)
+      const updateResult = await this.mealRepository.updateMeal(id, updateMealDto)
+      if (updateResult.affected === 0) {
+        throw new NotFoundException(errorMessages.generateEntityNotFound('Meal'))
+      }
     } catch (err) {
       throw new InternalServerErrorException(errorMessages.generateUpdateFailed('meal'))
     }
   }
 
   async deleteMeal(id: string): Promise<void> {
-    if (!(await this.findByIdOrThrow(id)))
-      throw new NotFoundException(errorMessages.generateEntityNotFound('Meal'))
-    return await this.mealRepository.deleteMeal(id)
+    try {
+      const deleteResult = await this.mealRepository.deleteMeal(id)
+      if (deleteResult.affected === 0) {
+        throw new NotFoundException(errorMessages.generateEntityNotFound('Meal'))
+      }
+    } catch (error) {
+      throw new InternalServerErrorException(errorMessages.generateDeleteFailed('meal'))
+    }
   }
 }

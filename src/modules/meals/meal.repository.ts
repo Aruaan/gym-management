@@ -1,12 +1,12 @@
 import { Injectable } from '@nestjs/common'
 import { Meal } from '../../database/entities/Meal.entity'
-import { DataSource, Repository } from 'typeorm'
+import { DataSource, DeleteResult, Repository, UpdateResult } from 'typeorm'
 import { CreateMealDto } from './dto/create-meal.dto'
 import { UpdateMealDto } from './dto/update-meal.dto'
 import { calculateOffset } from '../../database/databaseUtil/utilFunctions'
 import { PaginationWithFilterDto } from '../universaldtos/pagination-member-filter.dto'
-import { PaginatedMealResult } from './dto/paginated-meal.dto'
 import { mealAlias } from '../../database/databaseUtil/aliases'
+import { PaginatedResultDto } from '../universaldtos/paginated-result.dto'
 
 @Injectable()
 export class MealRepository extends Repository<Meal> {
@@ -21,7 +21,7 @@ export class MealRepository extends Repository<Meal> {
 
   async findAllMealsWithFilter(
     paginationWithFilter: PaginationWithFilterDto
-  ): Promise<PaginatedMealResult> {
+  ): Promise<PaginatedResultDto<Meal>> {
     const { limit, page, memberId } = paginationWithFilter
     const offset = calculateOffset(limit, page)
 
@@ -30,24 +30,20 @@ export class MealRepository extends Repository<Meal> {
       queryBuilder = queryBuilder.where('meal.member_id = :memberId', { memberId })
     }
 
-    const [meals, total] = await queryBuilder.getManyAndCount()
-    const totalPages = Math.ceil(total / limit)
-    return { data: meals, limit, offset, total, totalPages }
+    const [meals, count] = await queryBuilder.getManyAndCount()
+    const totalPages = Math.ceil(count / limit)
+    return { data: meals, limit, page, count, totalPages }
   }
 
   async findById(id: string): Promise<Meal> {
     return await this.findOneBy({ id })
   }
 
-  async updateMeal(id: string, updateMealDto: UpdateMealDto): Promise<Meal> {
-    const meal = await this.findById(id)
-    const updated = Object.assign(meal, updateMealDto)
-
-    await this.save(updated)
-    return updated
+  async updateMeal(id: string, updateMealDto: UpdateMealDto): Promise<UpdateResult> {
+    return await this.update(id, updateMealDto)
   }
 
-  async deleteMeal(id: string): Promise<void> {
-    await this.delete(id)
+  async deleteMeal(id: string): Promise<DeleteResult> {
+    return await this.delete(id)
   }
 }

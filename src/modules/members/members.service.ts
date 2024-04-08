@@ -1,6 +1,5 @@
 import { Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common'
 import { MemberRepository } from './members.repository'
-import { PaginatedMemberResult } from './dto/paginated-member.dto'
 import { InjectRepository } from '@nestjs/typeorm'
 import { UpdateMemberDto } from './dto/update-member.dto'
 import { Member } from '../../database/entities/Member.entity'
@@ -8,6 +7,7 @@ import { CreateMemberDto } from './dto/create-member.dto'
 import { PaginationRequestDto } from '../universaldtos/pagination-request.dto'
 import { DataSource } from 'typeorm'
 import { errorMessages } from '../../database/databaseUtil/utilFunctions'
+import { PaginatedResultDto } from '../universaldtos/paginated-result.dto'
 @Injectable()
 export class MemberService {
   constructor(
@@ -15,9 +15,11 @@ export class MemberService {
     @InjectRepository(MemberRepository) private memberRepository: MemberRepository
   ) {}
 
-  async findAllMembers(paginationRequestDto: PaginationRequestDto): Promise<PaginatedMemberResult> {
+  async findAllMembers(
+    paginationRequestDto: PaginationRequestDto
+  ): Promise<PaginatedResultDto<Member>> {
     try {
-      return this.memberRepository.findAllMembers({
+      return await this.memberRepository.findAllMembers({
         limit: paginationRequestDto.limit,
         page: paginationRequestDto.page,
       })
@@ -42,19 +44,25 @@ export class MemberService {
     return member
   }
 
-  async updateMember(id: string, updateMemberDto: UpdateMemberDto): Promise<Member> {
-    if (!(await this.findByIdOrThrow(id)))
-      throw new NotFoundException(errorMessages.generateEntityNotFound('Member'))
+  async updateMember(id: string, updateMemberDto: UpdateMemberDto): Promise<void> {
     try {
-      return await this.memberRepository.updateMember(id, updateMemberDto)
+      const updateResult = await this.memberRepository.updateMember(id, updateMemberDto)
+      if (updateResult.affected === 0) {
+        throw new NotFoundException(errorMessages.generateEntityNotFound('Member'))
+      }
     } catch (err) {
       throw new InternalServerErrorException(errorMessages.generateUpdateFailed('member'))
     }
   }
 
   async deleteMember(id: string): Promise<void> {
-    if (!(await this.findByIdOrThrow(id)))
-      throw new NotFoundException(errorMessages.generateEntityNotFound('Member'))
-    return await this.memberRepository.deleteMember(id)
+    try {
+      const deleteResult = await this.memberRepository.deleteMember(id)
+      if (deleteResult.affected === 0) {
+        throw new NotFoundException(errorMessages.generateEntityNotFound('Member'))
+      }
+    } catch (error) {
+      throw new InternalServerErrorException(errorMessages.generateDeleteFailed('member'))
+    }
   }
 }

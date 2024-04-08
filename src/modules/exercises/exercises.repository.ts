@@ -1,12 +1,12 @@
-import { DataSource, Repository } from 'typeorm'
+import { DataSource, DeleteResult, Repository, UpdateResult } from 'typeorm'
 import { Exercise } from '../../database/entities/Exercise.entity'
 import { Injectable } from '@nestjs/common'
-import { PaginatedExerciseResult } from './dto/paginated-exercise.dto'
 import { UpdateExerciseDto } from './dto/update-exercise.dto'
 import { calculateOffset } from '/Users/aleksa/Desktop/Projects/gym-backend/src/database/databaseUtil/utilFunctions'
 import { CreateExerciseDto } from './dto/create-exercise.dto'
 import { PaginationWithFilterDto } from '../universaldtos/pagination-member-filter.dto'
 import { exerciseAlias } from '../../database/databaseUtil/aliases'
+import { PaginatedResultDto } from '../universaldtos/paginated-result.dto'
 
 @Injectable()
 export class ExerciseRepository extends Repository<Exercise> {
@@ -21,31 +21,28 @@ export class ExerciseRepository extends Repository<Exercise> {
 
   async findAllExercisesWithFilter(
     paginationWithFilter: PaginationWithFilterDto
-  ): Promise<PaginatedExerciseResult> {
+  ): Promise<PaginatedResultDto<Exercise>> {
     const { limit, page, workoutId } = paginationWithFilter
     const offset = calculateOffset(limit, page)
+
     let queryBuilder = this.createQueryBuilder(exerciseAlias).skip(offset).limit(limit)
     if (workoutId) {
       queryBuilder = queryBuilder.where('exercise.workout_id = :workoutId', { workoutId })
     }
-    const [exercises, total] = await queryBuilder.getManyAndCount()
-    const totalPages = Math.ceil(total / limit)
-    return { data: exercises, limit, offset, total, totalPages }
+    const [exercises, count] = await queryBuilder.getManyAndCount()
+    const totalPages = Math.ceil(count / limit)
+    return { data: exercises, limit, page, count, totalPages }
   }
 
   async findById(id: string): Promise<Exercise> {
-    return await this.findOneBy({ id })
+    return this.findOneBy({ id })
   }
 
-  async updateExercise(id: string, updateExerciseDto: UpdateExerciseDto): Promise<Exercise> {
-    const exercise = await this.findById(id)
-    const updated = Object.assign(exercise, updateExerciseDto)
-
-    await this.save(updated)
-    return updated
+  async updateExercise(id: string, updateExerciseDto: UpdateExerciseDto): Promise<UpdateResult> {
+    return this.update(id, updateExerciseDto)
   }
 
-  async deleteExercise(id: string): Promise<void> {
-    await this.delete(id)
+  async deleteExercise(id: string): Promise<DeleteResult> {
+    return this.delete(id)
   }
 }

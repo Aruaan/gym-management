@@ -1,12 +1,12 @@
 import { Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
 import { MeasurementRepository } from './measurement.repository'
-import { PaginatedMeasurementResult } from './dto/paginated-measurement'
 import { Measurement } from '../../database/entities/Measurement.entity'
 import { CreateMeasurementDto } from './dto/create-measurement.dto'
 import { UpdateMeasurementDto } from './dto/update-measurement.dto'
 import { errorMessages } from '../../database/databaseUtil/utilFunctions'
 import { PaginationWithFilterDto } from '../universaldtos/pagination-member-filter.dto'
+import { PaginatedResultDto } from '../universaldtos/paginated-result.dto'
 
 @Injectable()
 export class MeasurementService {
@@ -17,7 +17,7 @@ export class MeasurementService {
 
   async findAllMeasurementsWithFilter(
     paginationWithFilter: PaginationWithFilterDto
-  ): Promise<PaginatedMeasurementResult> {
+  ): Promise<PaginatedResultDto<Measurement>> {
     try {
       return this.measurementRepository.findAllMeasurementsWithFilter({
         limit: paginationWithFilter.limit,
@@ -32,7 +32,7 @@ export class MeasurementService {
   async findByIdOrThrow(id: string): Promise<Measurement> {
     const measurement = await this.measurementRepository.findById(id)
     if (!measurement) {
-      throw new NotFoundException(`Measurement with ID ${id} not found`)
+      throw new NotFoundException(errorMessages.generateDeleteFailed('Measurement'))
     }
     return measurement
   }
@@ -45,23 +45,28 @@ export class MeasurementService {
     }
   }
 
-  async updateMeasurement(
-    id: string,
-    updateMeasurementDto: UpdateMeasurementDto
-  ): Promise<Measurement> {
-    if (!(await this.findByIdOrThrow(id)))
-      throw new NotFoundException(errorMessages.generateEntityNotFound('Measurement'))
-
+  async updateMeasurement(id: string, updateMeasurementDto: UpdateMeasurementDto): Promise<void> {
     try {
-      return await this.measurementRepository.updateMeasurement(id, updateMeasurementDto)
+      const updateResult = await this.measurementRepository.updateMeasurement(
+        id,
+        updateMeasurementDto
+      )
+      if (updateResult.affected === 0) {
+        throw new NotFoundException(errorMessages.generateEntityNotFound('Measurement'))
+      }
     } catch (err) {
-      throw new InternalServerErrorException(errorMessages.generateUpdateFailed('meals'))
+      throw new InternalServerErrorException(errorMessages.generateUpdateFailed('measurement'))
     }
   }
 
   async deleteMeasurement(id: string): Promise<void> {
-    if (!(await this.findByIdOrThrow(id)))
-      throw new NotFoundException(errorMessages.generateEntityNotFound('Measurement'))
-    return await this.measurementRepository.deleteMeasurement(id)
+    try {
+      const deleteResult = await this.measurementRepository.deleteMeasurement(id)
+      if (deleteResult.affected === 0) {
+        throw new NotFoundException(errorMessages.generateEntityNotFound('Measurement'))
+      }
+    } catch (error) {
+      throw new InternalServerErrorException(errorMessages.generateDeleteFailed('measurement'))
+    }
   }
 }

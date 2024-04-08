@@ -4,10 +4,7 @@ import {
   Delete,
   Get,
   HttpCode,
-  HttpException,
   HttpStatus,
-  InternalServerErrorException,
-  NotFoundException,
   Param,
   ParseUUIDPipe,
   Patch,
@@ -16,12 +13,11 @@ import {
 } from '@nestjs/common'
 import { MealService } from './meal.service'
 import { ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger'
-import { errorMessages } from '../../database/databaseUtil/utilFunctions'
-import { PaginatedMealResult } from './dto/paginated-meal.dto'
 import { Meal } from '../../database/entities/Meal.entity'
 import { CreateMealDto } from './dto/create-meal.dto'
 import { UpdateMealDto } from './dto/update-meal.dto'
 import { PaginationWithFilterDto } from '../universaldtos/pagination-member-filter.dto'
+import { PaginatedResultDto } from '../universaldtos/paginated-result.dto'
 @ApiTags('meals')
 @Controller('meals')
 export class MealController {
@@ -35,16 +31,9 @@ export class MealController {
   })
   @ApiQuery({ name: 'memberId', required: false, type: String })
   async findAll(
-    @Query() filteredpaginationRequest: PaginationWithFilterDto
-  ): Promise<PaginatedMealResult> {
-    try {
-      return await this.mealService.findAllMealsWithFilter(filteredpaginationRequest)
-    } catch (error) {
-      throw new HttpException(
-        errorMessages.generateFetchingError('meals'),
-        HttpStatus.INTERNAL_SERVER_ERROR
-      )
-    }
+    @Query() paginationWithFilter: PaginationWithFilterDto
+  ): Promise<PaginatedResultDto<Meal>> {
+    return this.mealService.findAllMealsWithFilter(paginationWithFilter)
   }
 
   @Get(':id')
@@ -54,9 +43,6 @@ export class MealController {
   })
   async findById(@Param('id', ParseUUIDPipe) id: string): Promise<Meal> {
     const meal = await this.mealService.findByIdOrThrow(id)
-    if (!meal) {
-      throw new NotFoundException(`Meal with ID ${id} not found`)
-    }
     return meal
   }
 
@@ -71,6 +57,7 @@ export class MealController {
   }
 
   @Patch(':id')
+  @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({
     summary: 'Update Existing Meal',
     description:
@@ -79,13 +66,8 @@ export class MealController {
   async updateMeal(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() updateMealDto: UpdateMealDto
-  ): Promise<Meal> {
-    const updatedMeal = await this.mealService.updateMeal(id, updateMealDto)
-
-    if (!updatedMeal) {
-      throw new NotFoundException(`Meal with ID ${id} not found`)
-    }
-    return updatedMeal
+  ): Promise<void> {
+    await this.mealService.updateMeal(id, updateMealDto)
   }
 
   @Delete(':id')
@@ -96,14 +78,6 @@ export class MealController {
       'Deletes a meal by ID. If successful return status 204, otherwise a not found exception.',
   })
   async deleteMeal(@Param('id') id: string): Promise<void> {
-    try {
-      await this.mealService.deleteMeal(id)
-    } catch (error) {
-      if (error instanceof NotFoundException) {
-        throw error
-      } else {
-        throw new InternalServerErrorException('Error deleting meal')
-      }
-    }
+    await this.mealService.deleteMeal(id)
   }
 }

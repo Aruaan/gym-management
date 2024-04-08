@@ -7,17 +7,17 @@ import {
   Body,
   Patch,
   Delete,
-  InternalServerErrorException,
   ParseUUIDPipe,
+  HttpCode,
+  HttpStatus,
 } from '@nestjs/common'
 import { ApiOperation, ApiTags } from '@nestjs/swagger'
-import { PaginatedMeasurementResult } from './dto/paginated-measurement'
 import { Measurement } from '../../database/entities/Measurement.entity'
 import { MeasurementService } from './measurement.service'
 import { CreateMeasurementDto } from './dto/create-measurement.dto'
 import { UpdateMeasurementDto } from './dto/update-measurement.dto'
-import { errorMessages } from '../../database/databaseUtil/utilFunctions'
 import { PaginationWithFilterDto } from '../universaldtos/pagination-member-filter.dto'
+import { PaginatedResultDto } from '../universaldtos/paginated-result.dto'
 @ApiTags('measurements')
 @Controller('measurements')
 export class MeasurementController {
@@ -31,12 +31,8 @@ export class MeasurementController {
   })
   async findAll(
     @Query() filteredPaginationRequest: PaginationWithFilterDto
-  ): Promise<PaginatedMeasurementResult> {
-    try {
-      return await this.measurementService.findAllMeasurementsWithFilter(filteredPaginationRequest)
-    } catch (error) {
-      throw new InternalServerErrorException(errorMessages.generateFetchingError('measurements'))
-    }
+  ): Promise<PaginatedResultDto<Measurement>> {
+    return this.measurementService.findAllMeasurementsWithFilter(filteredPaginationRequest)
   }
 
   @Get(':id')
@@ -46,7 +42,8 @@ export class MeasurementController {
       'Returns a measurement by ID. Returns "Not Found" if measurement with that ID does not exist.',
   })
   async findById(@Param('id', ParseUUIDPipe) id: string): Promise<Measurement> {
-    return this.measurementService.findByIdOrThrow(id)
+    const measurement = this.measurementService.findByIdOrThrow(id)
+    return measurement
   }
 
   @Post()
@@ -59,6 +56,7 @@ export class MeasurementController {
   }
 
   @Patch(':id')
+  @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({
     summary: 'Update Measurement',
     description:
@@ -67,16 +65,17 @@ export class MeasurementController {
   async updateMeasurement(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() updateMeasurementDto: UpdateMeasurementDto
-  ): Promise<Measurement> {
-    return this.measurementService.updateMeasurement(id, updateMeasurementDto)
+  ): Promise<void> {
+    this.measurementService.updateMeasurement(id, updateMeasurementDto)
   }
 
   @Delete(':id')
+  @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({
     summary: 'Delete Measurement',
     description: 'Deletes a measurement by ID.',
   })
   async deleteMeasurement(@Param('id', ParseUUIDPipe) id: string): Promise<void> {
-    return this.measurementService.deleteMeasurement(id)
+    this.measurementService.deleteMeasurement(id)
   }
 }

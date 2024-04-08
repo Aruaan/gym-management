@@ -1,26 +1,22 @@
 import {
   Controller,
   Get,
-  HttpException,
   HttpStatus,
-  NotFoundException,
   Param,
   Query,
   Delete,
   HttpCode,
   Patch,
   Body,
-  InternalServerErrorException,
   Post,
   ParseUUIDPipe,
 } from '@nestjs/common'
 import { ApiOperation, ApiTags } from '@nestjs/swagger'
-import { errorMessages } from '../../database/databaseUtil/utilFunctions'
 import { Exercise } from '../../database/entities/Exercise.entity'
 import { ExerciseService } from './exercises.service'
 import { CreateExerciseDto } from './dto/create-exercise.dto'
-import { PaginatedExerciseResult } from './dto/paginated-exercise.dto'
 import { PaginationWithFilterDto } from '../universaldtos/pagination-member-filter.dto'
+import { PaginatedResultDto } from '../universaldtos/paginated-result.dto'
 @ApiTags('exercises')
 @Controller('exercises')
 export class ExerciseController {
@@ -34,20 +30,8 @@ export class ExerciseController {
   })
   async findAll(
     @Query() paginationWithFilter: PaginationWithFilterDto
-  ): Promise<PaginatedExerciseResult> {
-    try {
-      return await this.exerciseService.findAllExercisesWithFilter({
-        limit: paginationWithFilter.limit,
-        page: paginationWithFilter.page,
-        workoutId: paginationWithFilter.workoutId || null,
-      })
-    } catch (error) {
-      console.error(error)
-      throw new HttpException(
-        errorMessages.generateFetchingError('exercises'),
-        HttpStatus.INTERNAL_SERVER_ERROR
-      )
-    }
+  ): Promise<PaginatedResultDto<Exercise>> {
+    return this.exerciseService.findAllExercisesWithFilter(paginationWithFilter)
   }
 
   @Get(':id')
@@ -57,10 +41,7 @@ export class ExerciseController {
       'Returns an exercise by ID. Returns "Not Found" if exercise with that ID does not exist.',
   })
   async findById(@Param('id', ParseUUIDPipe) id: string): Promise<Exercise> {
-    const exercise = await this.exerciseService.findByIdOrThrow(id)
-    if (!exercise) {
-      throw new NotFoundException(`Exercise with ID ${id} not found`)
-    }
+    const exercise = this.exerciseService.findByIdOrThrow(id)
     return exercise
   }
 
@@ -75,6 +56,7 @@ export class ExerciseController {
   }
 
   @Patch(':id')
+  @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({
     summary: 'Update Existing Exercise',
     description:
@@ -83,13 +65,8 @@ export class ExerciseController {
   async updateExercise(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() updateExerciseDto: CreateExerciseDto
-  ): Promise<Exercise> {
-    const updatedExercise = await this.exerciseService.updateExercise(id, updateExerciseDto)
-
-    if (!updatedExercise) {
-      throw new NotFoundException(`Exercise with ID ${id} not found`)
-    }
-    return updatedExercise
+  ): Promise<void> {
+    this.exerciseService.updateExercise(id, updateExerciseDto)
   }
 
   @Delete(':id')
@@ -100,14 +77,6 @@ export class ExerciseController {
       'Deletes an exercise by ID. If successful return status 204, otherwise a not found exception.',
   })
   async deleteExercise(@Param('id', ParseUUIDPipe) id: string): Promise<void> {
-    try {
-      await this.exerciseService.deleteExercise(id)
-    } catch (error) {
-      if (error instanceof NotFoundException) {
-        throw error
-      } else {
-        throw new InternalServerErrorException('Error deleting exercise')
-      }
-    }
+    this.exerciseService.deleteExercise(id)
   }
 }

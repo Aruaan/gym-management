@@ -1,12 +1,12 @@
 import { Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
 import { ExerciseRepository } from './exercises.repository'
-import { PaginatedExerciseResult } from './dto/paginated-exercise.dto'
 import { CreateExerciseDto } from './dto/create-exercise.dto'
 import { UpdateExerciseDto } from './dto/update-exercise.dto'
 import { Exercise } from '../../database/entities/Exercise.entity'
 import { PaginationWithFilterDto } from '../universaldtos/pagination-member-filter.dto'
 import { errorMessages } from '../../database/databaseUtil/utilFunctions'
+import { PaginatedResultDto } from '../universaldtos/paginated-result.dto'
 
 @Injectable()
 export class ExerciseService {
@@ -17,7 +17,7 @@ export class ExerciseService {
 
   async findAllExercisesWithFilter(
     paginationWithFilter: PaginationWithFilterDto
-  ): Promise<PaginatedExerciseResult> {
+  ): Promise<PaginatedResultDto<Exercise>> {
     try {
       return this.exerciseRepository.findAllExercisesWithFilter({
         limit: paginationWithFilter.limit,
@@ -45,18 +45,25 @@ export class ExerciseService {
     }
   }
 
-  async updateExercise(id: string, updateExerciseDto: UpdateExerciseDto): Promise<Exercise> {
+  async updateExercise(id: string, updateExerciseDto: UpdateExerciseDto): Promise<void> {
     try {
-      return await this.exerciseRepository.updateExercise(id, updateExerciseDto)
-    } catch (error) {
-      throw new InternalServerErrorException(errorMessages.generateUpdateFailed('equipment'))
+      const updateResult = await this.exerciseRepository.updateExercise(id, updateExerciseDto)
+      if (updateResult.affected === 0) {
+        throw new NotFoundException(errorMessages.generateEntityNotFound('Exercise'))
+      }
+    } catch (err) {
+      throw new InternalServerErrorException(errorMessages.generateUpdateFailed('exercise'))
     }
   }
 
   async deleteExercise(id: string): Promise<void> {
-    if (!(await this.findByIdOrThrow(id)))
-      throw new NotFoundException(errorMessages.generateEntityNotFound('Exercise'))
-
-    return await this.exerciseRepository.deleteExercise(id)
+    try {
+      const deleteResult = await this.exerciseRepository.deleteExercise(id)
+      if (deleteResult.affected === 0) {
+        throw new NotFoundException(errorMessages.generateEntityNotFound('Exercise'))
+      }
+    } catch (error) {
+      throw new InternalServerErrorException(errorMessages.generateDeleteFailed('exercise'))
+    }
   }
 }
